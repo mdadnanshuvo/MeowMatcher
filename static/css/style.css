@@ -53,7 +53,7 @@ main {
 /* Card Content */
 .card img {
     max-width: 80%; /* Adjust width as needed */
-    max-height: 80%;
+    max-height: 60%;
     display: flex;
     margin: 20px; /* Center the image horizontally */
     border-bottom: 1px solid #ddd;
@@ -65,29 +65,52 @@ main {
 /* Actions Section */
 .actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Space between left and right groups */
     align-items: center;
     padding: 10px 15px;
 }
 
-.actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 22px;
-    color: #888;
-    transition: color 0.3s ease, transform 0.2s ease;
+.left-icons {
+    display: flex;
+    align-items: center; /* Vertically align heart icon */
+    margin-left: 50px;
 }
 
-.actions button:hover {
+.right-icons {
+    display: flex;
+    gap: 10px; /* Add spacing between upvote and downvote buttons */
+    align-items: center; /* Vertically align upvote and downvote icons */
+    margin-right: 50px;
+    gap: 20px;
+    border-radius: 40px;
+}
+
+button.heart {
+    margin-right: 30px; /* Add space to the right of the heart button */
+    font-size: 40px; /* Adjust size for consistency */
     color: red;
+    transition: color 0.3s ease, transform 0.2s ease;
+    border: none;
+    background-color: #f3f3f3;
+}
+
+button.heart:hover {
     transform: scale(1.2);
 }
 
-.actions button:active {
-    color: darkred;
-    transform: scale(1);
+button.upvote, button.downvote {
+    font-size: 32px;
+    color: #888;
+    transition: color 0.3s ease, transform 0.2s ease;
+    border: none;
+    background-color: #f3f3f3;
 }
+
+button.upvote:hover, button.downvote:hover {
+    color: green;
+    transform: scale(1.2);
+}
+
 
 /* Loader Animation */
 .spinner {

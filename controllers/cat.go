@@ -12,6 +12,20 @@ type CatController struct {
 	web.Controller
 }
 
+func (c *CatController) RenderVotingPage() {
+	c.TplName = "index.tpl"
+}
+
+// Render Breeds Page
+func (c *CatController) RenderBreedsPage() {
+	c.TplName = "breeds.tpl"
+}
+
+// Render Favorites Page
+func (c *CatController) RenderFavoritesPage() {
+	c.TplName = "favorites.tpl"
+}
+
 // Fetch random cat images for the Voting Tab
 func (c *CatController) GetVotingCats() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")

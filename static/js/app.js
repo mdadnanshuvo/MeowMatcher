@@ -54,29 +54,34 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="card" id="cat-${cat.id}">
                 <img src="${cat.url}" alt="Random Cat">
                 <div class="actions">
-                    <button class="heart" data-id="${cat.id}">❤️</button>
-                    <button class="upvote" data-id="${cat.id}">👍</button>
-                    <button class="downvote" data-id="${cat.id}">👎</button>
+                    <div class="left-icons">
+                        <button class="heart" data-id="${cat.id}">❤️</button>
+                    </div>
+                    <div class="right-icons">
+                        <button class="upvote" data-id="${cat.id}">👍</button>
+                        <button class="downvote" data-id="${cat.id}">👎</button>
+                    </div>
                 </div>
             </div>
         `;
-
+    
         // Button Event Listeners
         document.querySelector(".heart").addEventListener("click", () => {
             saveFavorite(cat);
             loadVoting();
         });
-
+    
         document.querySelector(".upvote").addEventListener("click", () => {
             showToast("You upvoted this cat!");
             loadVoting();
         });
-
+    
         document.querySelector(".downvote").addEventListener("click", () => {
             showToast("You downvoted this cat!");
             loadVoting();
         });
     }
+    
 
     // Save Cat to Favorites
     function saveFavorite(cat) {
