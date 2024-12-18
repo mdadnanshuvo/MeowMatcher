@@ -13,7 +13,7 @@ body {
 
 /* Main Container */
 main {
-    max-width: 500px;
+    max-width: 800px;
     margin: 40px auto;
     background: white;
     border-radius: 12px;
@@ -21,10 +21,11 @@ main {
     overflow: hidden;
 }
 
+
 /* Navigation Tabs */
 .nav {
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start; /* Align tabs to the left */
     align-items: center;
     background-color: #fdfdfd;
     border-bottom: 1px solid #ddd;
@@ -37,6 +38,7 @@ main {
     font-weight: bold;
     font-size: 16px;
     transition: color 0.3s ease;
+    margin: 20px; /* Add spacing between tabs */
 }
 
 .nav a.active {
@@ -47,13 +49,18 @@ main {
     color: #555;
 }
 
+
 /* Card Content */
 .card img {
-    width: 100%;
-    height: auto;
-    display: block;
+    max-width: 80%; /* Adjust width as needed */
+    max-height: 80%;
+    display: flex;
+    margin: 20px; /* Center the image horizontally */
     border-bottom: 1px solid #ddd;
+    border-radius: 10px;
+    justify-self: center;
 }
+
 
 /* Actions Section */
 .actions {
