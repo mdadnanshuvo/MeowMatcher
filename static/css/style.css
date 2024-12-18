@@ -1,0 +1,113 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Main Container */
+main {
+    max-width: 500px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Navigation Tabs */
+.nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #fdfdfd;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+.nav a {
+    text-decoration: none;
+    color: #888;
+    font-weight: bold;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.nav a.active {
+    color: red;
+}
+
+.nav a:hover {
+    color: #555;
+}
+
+/* Card Content */
+.card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Actions Section */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: #888;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.actions button:hover {
+    color: red;
+    transform: scale(1.2);
+}
+
+.actions button:active {
+    color: darkred;
+    transform: scale(1);
+}
+
+/* Loader Animation */
+.spinner {
+    margin: 10px auto;
+    width: 30px;
+    height: 30px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #555;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    text-align: center;
+}
