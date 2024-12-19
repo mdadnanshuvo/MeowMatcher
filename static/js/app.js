@@ -100,54 +100,112 @@ document.addEventListener("DOMContentLoaded", () => {
             content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
             return;
         }
-
+    
         content.innerHTML = `
-    <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
-        <div class="view-toggle flex py-4 bg-white gap-2">
-            <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
-                <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">
-            </button>
-            <button class="toggle-btn" id="list-view" role="button" tabindex="0">
-                <img src="/static/icons/list-view.png" alt="List View" class="view-icon">
-            </button>
+        <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
+            <div class="view-toggle flex py-4 bg-white gap-2">
+                <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
+                    <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">
+                </button>
+                <button class="toggle-btn" id="list-view" role="button" tabindex="0">
+                    <img src="/static/icons/list-view.png" alt="List View" class="view-icon">
+                </button>
+            </div>
+            <div id="favorites-container" class="grid">
+                ${favorites
+                    .map(
+                        (fav, index) => `
+                        <div class="grid-view-item" data-index="${index}">
+                            <img src="${fav.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
+                        </div>`
+                    )
+                    .join("")}
+            </div>
+            <div id="image-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
+                    <div class="modal-nav">
+                        <button id="prev-image" class="nav-btn">Prev</button>
+                        <button id="next-image" class="nav-btn">Next</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="favorites-container" class="grid">
-            ${favorites
-                .map(
-                    (fav) => `
-                    <div class="grid-view-item">
-                        <img src="${fav.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow">
-                    </div>`
-                )
-                .join("")}
-        </div>
-    </div>
-`;
-
-
-
-
-
+        `;
+    
         const gridViewBtn = document.getElementById("grid-view");
         const listViewBtn = document.getElementById("list-view");
         const favoritesContainer = document.getElementById("favorites-container");
-
+        const modal = document.getElementById("image-modal");
+        const modalImage = document.getElementById("modal-image");
+        const closeModal = modal.querySelector(".close");
+        const prevImage = document.getElementById("prev-image");
+        const nextImage = document.getElementById("next-image");
+    
+        let currentImageIndex = 0;
+    
+        // Grid and List View Toggle
         gridViewBtn.addEventListener("click", () => {
             favoritesContainer.className = "grid grid-cols-3 gap-y-1 gap-x-1";
         });
-
+    
         listViewBtn.addEventListener("click", () => {
-            favoritesContainer.className = "block";
+            favoritesContainer.className = "list";
             favoritesContainer.innerHTML = favorites
                 .map(
-                    (fav) => `
-                    <div class="flex items-center gap-4 py-2">
-                        <img src="${fav.url}" alt="Favorite Cat" class="w-24 h-24 object-cover">
+                    (fav, index) => `
+                    <div class="list-view-item" data-index="${index}">
+                        <img src="${fav.url}" alt="Favorite Cat" class="w-24 h-24 object-cover clickable">
                     </div>`
                 )
                 .join("");
+            attachClickHandlers();
+        });
+    
+        // Attach click handlers for modal opening
+        function attachClickHandlers() {
+            const clickableImages = document.querySelectorAll(".clickable");
+            clickableImages.forEach((img) => {
+                img.addEventListener("click", (e) => {
+                    const index = parseInt(e.target.closest("[data-index]").dataset.index, 10);
+                    openModal(index);
+                });
+            });
+        }
+    
+        attachClickHandlers();
+    
+        // Modal functionality
+        function openModal(index) {
+            currentImageIndex = index;
+            modalImage.src = favorites[currentImageIndex].url;
+            modal.classList.remove("hidden");
+        }
+    
+        function closeModalHandler() {
+            modal.classList.add("hidden");
+        }
+    
+        function navigateImages(direction) {
+            currentImageIndex = (currentImageIndex + direction + favorites.length) % favorites.length;
+            modalImage.src = favorites[currentImageIndex].url;
+        }
+    
+        closeModal.addEventListener("click", closeModalHandler);
+        prevImage.addEventListener("click", () => navigateImages(-1));
+        nextImage.addEventListener("click", () => navigateImages(1));
+    
+        // Close modal on outside click
+        window.addEventListener("click", (e) => {
+            if (e.target === modal) closeModalHandler();
         });
     }
+    
+
+
+
+
 
     // Show Toast Notification
     function showToast(message) {
