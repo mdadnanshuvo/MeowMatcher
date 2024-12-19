@@ -250,29 +250,48 @@ button.upvote:hover, button.downvote:hover {
     height: auto;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add smooth transformation */
+    cursor: pointer; /* Change cursor to pointer */
 }
+
+#favorites-container.grid img:hover {
+    transform: scale(1.1); /* Slightly enlarge the image on hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Enhance shadow effect */
+}
+
 
 /* Favorites List */
 #favorites-container.list {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center align items horizontally */
     padding: 10px;
 }
 
 #favorites-container.list .list-view-item {
     display: flex;
     align-items: center;
+    justify-content: center; /* Center align content within each row */
     margin-bottom: 15px;
     border-bottom: 1px solid #ddd;
     padding-bottom: 10px;
+    width: 100%; /* Ensure row takes up full width */
 }
+
 
 #favorites-container.list img {
-    width: 100px;
-    height: 100px;
-    margin-right: 15px;
+    width: 500px;
+    height: 300px;
     border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add smooth transformation */
+    cursor: pointer; /* Change cursor to pointer */
 }
 
+#favorites-container.list img:hover {
+    transform: scale(1.1); /* Slightly enlarge the image on hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Enhance shadow effect */
+}
 
 /* Icons for View Toggle Buttons */
 .view-icon {

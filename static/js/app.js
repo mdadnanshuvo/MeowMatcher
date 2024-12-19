@@ -204,6 +204,63 @@ document.addEventListener("DOMContentLoaded", () => {
     
 
 
+    // Update for app.js
+document.addEventListener("DOMContentLoaded", () => {
+    const favoritesContainer = document.getElementById("favorites-container");
+
+    // Update Favorites View Rendering to Include Delete Icon
+    function loadFavorites() {
+        const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+        if (favorites.length === 0) {
+            content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
+            return;
+        }
+
+        content.innerHTML = `
+        <div class="favorites-tab-container">
+            <div class="view-toggle">
+                <button class="toggle-btn active" id="grid-view">Grid View</button>
+                <button class="toggle-btn" id="list-view">List View</button>
+            </div>
+            <div id="favorites-container" class="grid">
+                ${favorites
+                    .map(
+                        (fav, index) => `
+                        <div class="grid-view-item" data-index="${index}">
+                            <img src="${fav.url}" alt="Favorite Cat" class="clickable">
+                            <img src="/site/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                        </div>`
+                    )
+                    .join("")}
+            </div>
+        </div>`;
+
+        attachDeleteHandlers();
+    }
+
+    // Attach Delete Handlers
+    function attachDeleteHandlers() {
+        const deleteIcons = document.querySelectorAll(".delete-icon");
+        deleteIcons.forEach((icon) => {
+            icon.addEventListener("click", (e) => {
+                const idToDelete = e.target.dataset.id;
+                deleteFavorite(idToDelete);
+            });
+        });
+    }
+
+    // Delete Favorite Functionality
+    function deleteFavorite(id) {
+        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+        favorites = favorites.filter((fav) => fav.id !== id);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        loadFavorites();
+    }
+
+    // Initial Load of Favorites
+    loadFavorites();
+});
+
 
 
 
