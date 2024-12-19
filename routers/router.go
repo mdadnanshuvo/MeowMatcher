@@ -7,15 +7,13 @@ import (
 )
 
 func init() {
-	// Route for the home page (index page should show voting)
-	beego.Router("/", &controllers.CatController{}, "get:RenderVotingPage")
+	// JSON Routes
+	beego.Router("/voting", &controllers.CatController{}, "get:VotingCats")
+	beego.Router("/breeds", &controllers.CatController{}, "get:Breeds")
+	beego.Router("/favorites", &controllers.CatController{}, "get:Favorites")
 
-	// Route for fetching random cat images (Voting Tab, optional if /voting is kept)
-	beego.Router("/voting", &controllers.CatController{}, "get:RenderVotingPage")
-
-	// Route for listing cat breeds (Breeds Tab)
-	beego.Router("/breeds", &controllers.CatController{}, "get:RenderBreedsPage")
-
-	// Routes for managing favorites (Favorites Tab)
-	beego.Router("/favorites", &controllers.CatController{}, "get:RenderFavoritesPage")
+	// HTML Routes
+	beego.Router("/", &controllers.CatController{}, "get:VotingCatsHTML")              // Render voting page with HTML
+	beego.Router("/breeds-html", &controllers.CatController{}, "get:BreedsHTML")       // Render breeds page with HTML
+	beego.Router("/favorites-html", &controllers.CatController{}, "get:FavoritesHTML") // Render favorites page with HTML
 }

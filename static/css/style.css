@@ -21,7 +21,6 @@ main {
     overflow: hidden;
 }
 
-
 /* Navigation Tabs */
 .nav {
     display: flex;
@@ -49,7 +48,6 @@ main {
     color: #555;
 }
 
-
 /* Card Content */
 .card img {
     max-width: 80%; /* Adjust width as needed */
@@ -60,7 +58,6 @@ main {
     border-radius: 10px;
     justify-self: center;
 }
-
 
 /* Actions Section */
 .actions {
@@ -111,7 +108,6 @@ button.upvote:hover, button.downvote:hover {
     transform: scale(1.2);
 }
 
-
 /* Loader Animation */
 .spinner {
     margin: 10px auto;
@@ -140,4 +136,147 @@ button.upvote:hover, button.downvote:hover {
     border-radius: 5px;
     z-index: 1000;
     text-align: center;
+}
+
+/* View Toggle Buttons */
+.view-toggle {
+    display: flex;
+    justify-content: flex-start; /* Align buttons to the left */
+    padding: 5px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+    gap: 10px; /* Add spacing between buttons */
+}
+
+.view-toggle .toggle-btn {
+    padding: 10px 15px;
+    margin: 0; /* Remove unnecessary margin */
+    border: 1px solid #ddd;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.view-toggle .toggle-btn.active {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    transform: scale(1.05);
+}
+
+.view-toggle .toggle-btn:hover {
+    background-color: #f7f7f7;
+    transform: scale(1.1);
+}
+
+/* Grid View Styles */
+.grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    padding: 10px;
+}
+
+.grid-view-item {
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.grid-view-item img {
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.grid-view-item:hover {
+    transform: scale(1.05);
+}
+
+/* List View Styles */
+.list-view {
+    display: block;
+    padding: 10px;
+}
+
+.list-view-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.list-view-item:hover {
+    background-color: #f9f9f9;
+}
+
+.list-view-item img {
+    margin-right: 15px;
+    max-width: 150px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.list-view-item .cat-info {
+    font-size: 14px;
+    color: #555;
+}
+
+/* Favorites Tab Empty State */
+.favorites-empty {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+}
+
+/* Favorites Tab Container */
+#favorites-container {
+    margin-top: 20px;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+/* Favorites Grid */
+#favorites-container.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    padding: 10px;
+}
+
+#favorites-container.grid img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Favorites List */
+#favorites-container.list {
+    display: block;
+    padding: 10px;
+}
+
+#favorites-container.list .list-view-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+#favorites-container.list img {
+    width: 100px;
+    height: 100px;
+    margin-right: 15px;
+    border-radius: 8px;
+}
+
+
+/* Icons for View Toggle Buttons */
+.view-icon {
+    width: 24px;
+    height: 24px;
+    display: inline-block;
 }
