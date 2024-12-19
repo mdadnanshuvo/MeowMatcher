@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -157,4 +158,77 @@ func fetchDataFromAPI(apiKey, baseURL, endpoint string, params map[string]string
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
 	return data, nil
+}
+
+// Add a Favorite via POST method
+func (c *CatController) AddFavorite() {
+	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
+
+	// Get the image_id and sub_id from the POST request (JSON body)
+	var requestBody struct {
+		ImageID string `json:"image_id"`
+		SubID   string `json:"sub_id,omitempty"`
+	}
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &requestBody); err != nil {
+		c.Ctx.Output.SetStatus(http.StatusBadRequest)
+		c.Data["json"] = map[string]string{"error": "Invalid request body"}
+		c.ServeJSON()
+		return
+	}
+
+	// Prepare the data to be sent to the Cat API
+	favoriteData := map[string]interface{}{
+		"image_id": requestBody.ImageID,
+		"sub_id":   requestBody.SubID,
+	}
+
+	// Create a new favorite by sending a POST request to the Cat API
+	client := &http.Client{}
+	body, err := json.Marshal(favoriteData)
+	if err != nil {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to encode request body"}
+		c.ServeJSON()
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/favourites", bytes.NewBuffer(body))
+	if err != nil {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to create request"}
+		c.ServeJSON()
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", apiKey)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to connect to Cat API"}
+		c.ServeJSON()
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": fmt.Sprintf("Failed to create favorite. Status: %d", resp.StatusCode)}
+		c.ServeJSON()
+		return
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to decode response from Cat API"}
+		c.ServeJSON()
+		return
+	}
+
+	// Return the newly created favorite ID as JSON
+	c.Data["json"] = result
+	c.ServeJSON()
 }

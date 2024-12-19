@@ -12,6 +12,8 @@ func init() {
 	beego.Router("/breeds", &controllers.CatController{}, "get:Breeds")
 	beego.Router("/favorites", &controllers.CatController{}, "get:Favorites")
 
+	beego.Router("/addfavorite", &controllers.CatController{}, "post:AddFavorite")
+
 	// HTML Routes
 	beego.Router("/", &controllers.CatController{}, "get:VotingCatsHTML")              // Render voting page with HTML
 	beego.Router("/breeds-html", &controllers.CatController{}, "get:BreedsHTML")       // Render breeds page with HTML
