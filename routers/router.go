@@ -7,15 +7,18 @@ import (
 )
 
 func init() {
-	// JSON Routes
+	// Index Route
+	beego.Router("/", &controllers.CatController{}, "get:Index")
+
+	// Voting Data
 	beego.Router("/voting", &controllers.CatController{}, "get:VotingCats")
+
+	// Breeds Data
 	beego.Router("/breeds", &controllers.CatController{}, "get:Breeds")
+
+	// Favorites Data
 	beego.Router("/favorites", &controllers.CatController{}, "get:Favorites")
 
+	// Add Favorite
 	beego.Router("/addfavorite", &controllers.CatController{}, "post:AddFavorite")
-
-	// HTML Routes
-	beego.Router("/", &controllers.CatController{}, "get:VotingCatsHTML")              // Render voting page with HTML
-	beego.Router("/breeds-html", &controllers.CatController{}, "get:BreedsHTML")       // Render breeds page with HTML
-	beego.Router("/favorites-html", &controllers.CatController{}, "get:FavoritesHTML") // Render favorites page with HTML
 }

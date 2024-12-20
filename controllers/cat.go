@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"bytes"
+	channels "catApiProject/Channels"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/beego/beego/v2/server/web"
 )
@@ -14,93 +14,63 @@ type CatController struct {
 	web.Controller
 }
 
-// Render Voting Data as JSON
+// Render the index page
+func (c *CatController) Index() {
+	c.TplName = "index.tpl"
+	c.Data["Title"] = "Welcome to the Cat API"
+	c.Data["Message"] = "Explore voting, breeds, and favorites!"
+}
+
+// VotingCats provides voting data as JSON
 func (c *CatController) VotingCats() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
 	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
 
-	// Fetch data from the Cat API
-	data, err := fetchDataFromAPI(apiKey, baseURL, "/images/search", map[string]string{
-		"limit": "10",
-	})
+	// Define the endpoint for voting data
+	endpoints := map[string]map[string]string{
+		"/images/search": {"limit": "10"},
+	}
+
+	// Fetch voting data concurrently using the channels package
+	data, err := channels.FetchDataConcurrently(apiKey, baseURL, endpoints)
 	if err != nil {
-		// Return an error response as JSON
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to fetch voting data"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	// Return the fetched data as JSON
-	c.Data["json"] = data
+	// Return only the voting data as JSON
+	c.Data["json"] = data["/images/search"]
 	c.ServeJSON()
 }
 
-// Render Voting Page with HTML
-func (c *CatController) VotingCatsHTML() {
-	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
-	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
-
-	// Fetch data from the Cat API
-	data, err := fetchDataFromAPI(apiKey, baseURL, "/images/search", map[string]string{
-		"limit": "10",
-	})
-	if err != nil {
-		// Pass error message to template
-		fmt.Println("Error fetching voting data:", err)
-		c.Data["error"] = "Failed to fetch voting data. Please try again later."
-	} else {
-		// Pass data to template
-		c.Data["votingCats"] = data
-	}
-
-	// Render the voting template
-	c.TplName = "index.tpl"
-}
-
-// Render Breeds Data as JSON
+// Breeds provides breeds data as JSON
 func (c *CatController) Breeds() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
 	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
 
-	// Fetch data from the Cat API
-	data, err := fetchDataFromAPI(apiKey, baseURL, "/breeds", nil)
+	// Define the endpoint for breeds data
+	endpoints := map[string]map[string]string{
+		"/breeds": nil,
+	}
+
+	// Fetch breeds data concurrently using the channels package
+	data, err := channels.FetchDataConcurrently(apiKey, baseURL, endpoints)
 	if err != nil {
-		// Return an error response as JSON
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to fetch breeds"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	// Return the fetched data as JSON
-	c.Data["json"] = data
+	// Return only the breeds data as JSON
+	c.Data["json"] = data["/breeds"]
 	c.ServeJSON()
 }
 
-// Render Breeds Page with HTML
-func (c *CatController) BreedsHTML() {
-	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
-	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
-
-	// Fetch data from the Cat API
-	data, err := fetchDataFromAPI(apiKey, baseURL, "/breeds", nil)
-	if err != nil {
-		// Pass error message to template
-		fmt.Println("Error fetching breeds:", err)
-		c.Data["error"] = "Failed to fetch breeds. Please try again later."
-	} else {
-		// Pass data to template
-		c.Data["breeds"] = data
-	}
-
-	// Render the breeds template
-	c.TplName = "breeds.tpl"
-}
-
-// Render Favorites Data as JSON
+// Favorites provides a placeholder list of favorite cats
 func (c *CatController) Favorites() {
-	// Placeholder logic for fetching favorites
 	favorites := []map[string]string{
 		{"id": "1", "url": "https://example.com/cat1.jpg"},
 		{"id": "2", "url": "https://example.com/cat2.jpg"},
@@ -111,61 +81,12 @@ func (c *CatController) Favorites() {
 	c.ServeJSON()
 }
 
-// Render Favorites Page with HTML
-func (c *CatController) FavoritesHTML() {
-	// Placeholder logic for fetching favorites
-	favorites := []map[string]string{
-		{"id": "1", "url": "https://example.com/cat1.jpg"},
-		{"id": "2", "url": "https://example.com/cat2.jpg"},
-	}
-
-	// Pass favorites to template
-	c.Data["favorites"] = favorites
-
-	// Render the favorites template
-	c.TplName = "favorites.tpl"
-}
-
-// Utility function to fetch data from the Cat API
-func fetchDataFromAPI(apiKey, baseURL, endpoint string, params map[string]string) ([]map[string]interface{}, error) {
-	client := &http.Client{}
-	fullURL, _ := url.Parse(baseURL + endpoint)
-
-	// Add query string parameters
-	query := fullURL.Query()
-	query.Add("api_key", apiKey)
-	for key, value := range params {
-		query.Add(key, value)
-	}
-	fullURL.RawQuery = query.Encode()
-
-	req, _ := http.NewRequest("GET", fullURL.String(), nil)
-	req.Header.Set("x-api-key", apiKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("non-OK response: %d", resp.StatusCode)
-	}
-
-	var data []map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
-	}
-	return data, nil
-}
-
-// Add a Favorite via POST method
+// AddFavorite adds a new favorite cat via POST request
 func (c *CatController) AddFavorite() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
 	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
 
-	// Get the image_id and sub_id from the POST request (JSON body)
+	// Parse the incoming JSON request body
 	var requestBody struct {
 		ImageID string `json:"image_id"`
 		SubID   string `json:"sub_id,omitempty"`
@@ -177,13 +98,13 @@ func (c *CatController) AddFavorite() {
 		return
 	}
 
-	// Prepare the data to be sent to the Cat API
+	// Prepare the data for the POST request
 	favoriteData := map[string]interface{}{
 		"image_id": requestBody.ImageID,
 		"sub_id":   requestBody.SubID,
 	}
 
-	// Create a new favorite by sending a POST request to the Cat API
+	// Make the POST request to the Cat API
 	client := &http.Client{}
 	body, err := json.Marshal(favoriteData)
 	if err != nil {
@@ -228,7 +149,7 @@ func (c *CatController) AddFavorite() {
 		return
 	}
 
-	// Return the newly created favorite ID as JSON
+	// Return the response from the Cat API as JSON
 	c.Data["json"] = result
 	c.ServeJSON()
 }

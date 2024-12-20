@@ -14,15 +14,25 @@ document.addEventListener("DOMContentLoaded", () => {
             const selectedTab = tab.dataset.tab;
             if (selectedTab === "voting") loadVoting();
             else if (selectedTab === "favorites") loadFavorites();
+            else if (selectedTab === "breeds") loadBreeds();
         });
     });
 
     // Load the Voting Tab
     async function loadVoting() {
-        showLoader();
-        const cat = await fetchRandomCat();
-        if (cat) renderCat(cat);
-        else content.innerHTML = "<p>Could not load cat. Try again!</p>";
+        const cachedVotingData = JSON.parse(localStorage.getItem("votingData"));
+        if (cachedVotingData) {
+            renderCat(cachedVotingData);
+        } else {
+            showLoader();
+            const cat = await fetchRandomCat();
+            if (cat) {
+                localStorage.setItem("votingData", JSON.stringify(cat));
+                renderCat(cat);
+            } else {
+                content.innerHTML = "<p>Could not load cat. Try again!</p>";
+            }
+        }
     }
 
     // Show Loader Animation
@@ -67,17 +77,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.querySelector(".heart").addEventListener("click", () => {
             saveFavorite(cat);
+            localStorage.removeItem("votingData"); // Clear cache after action
             loadVoting();
         });
 
         document.querySelector(".upvote").addEventListener("click", () => {
             showToast("You upvoted this cat!");
-            loadVoting();
         });
 
         document.querySelector(".downvote").addEventListener("click", () => {
             showToast("You downvoted this cat!");
-            loadVoting();
         });
     }
 
@@ -93,155 +102,127 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Load Favorites Tab with Grid and List View Toggle
+    // Load Breeds Tab
+    async function loadBreeds() {
+        showLoader();
+        try {
+            const response = await fetch("/breeds");
+            if (!response.ok) throw new Error("Failed to fetch breeds data");
+            const breeds = await response.json();
+            renderBreeds(breeds);
+        } catch (error) {
+            content.innerHTML = "<p>Could not load breeds. Try again!</p>";
+        }
+    }
+
+    // Render Breeds Content
+    function renderBreeds(breeds) {
+        content.innerHTML = `
+            <div class="breeds-search">
+                <input type="text" id="breed-search" placeholder="Search Breeds">
+                <button id="breed-clear">X</button>
+            </div>
+            <div id="breeds-container" class="gallery">
+                ${breeds
+                    .map(
+                        (breed, index) => `
+                        <div class="gallery-item ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${breed.image?.url || 'placeholder.jpg'}" alt="${breed.name}">
+                            <div class="breed-info">
+                                <h3>${breed.name}</h3>
+                                <p>${breed.origin}</p>
+                                <p>${breed.description}</p>
+                                <a href="${breed.wikipedia_url}" target="_blank">Wikipedia</a>
+                            </div>
+                        </div>`
+                    )
+                    .join("")}
+                <div class="gallery-dots">
+                    ${breeds.map((_, index) => `<span class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`).join("")}
+                </div>
+            </div>
+        `;
+
+        initializeGallery();
+    }
+
+    function initializeGallery() {
+        const items = document.querySelectorAll(".gallery-item");
+        const dots = document.querySelectorAll(".gallery-dots .dot");
+        let currentIndex = 0;
+
+        const updateGallery = (index) => {
+            items.forEach((item, i) => item.classList.toggle("active", i === index));
+            dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+        };
+
+        const autoSwipe = () => {
+            currentIndex = (currentIndex + 1) % items.length;
+            updateGallery(currentIndex);
+        };
+
+        let interval = setInterval(autoSwipe, 3000);
+
+        dots.forEach((dot) => {
+            dot.addEventListener("click", (e) => {
+                clearInterval(interval);
+                currentIndex = parseInt(e.target.dataset.index, 10);
+                updateGallery(currentIndex);
+                interval = setInterval(autoSwipe, 3000);
+            });
+        });
+    }
+
+    // Load Favorites Tab
     function loadFavorites() {
         const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
         if (favorites.length === 0) {
             content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
             return;
         }
-    
+
         content.innerHTML = `
-        <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
-            <div class="view-toggle flex py-4 bg-white gap-2">
-                <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
-                    <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">
-                </button>
-                <button class="toggle-btn" id="list-view" role="button" tabindex="0">
-                    <img src="/static/icons/list-view.png" alt="List View" class="view-icon">
-                </button>
-            </div>
-            <div id="favorites-container" class="grid">
-                ${favorites
-                    .map(
-                        (fav, index) => `
+            <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
+                <div class="view-toggle flex py-4 bg-white gap-2">
+                    <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
+                        <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">
+                    </button>
+                    <button class="toggle-btn" id="list-view" role="button" tabindex="0">
+                        <img src="/static/icons/list-view.png" alt="List View" class="view-icon">
+                    </button>
+                </div>
+                <div id="favorites-container" class="grid">
+                    ${favorites
+                        .map(
+                            (fav, index) => `
                         <div class="grid-view-item" data-index="${index}">
                             <img src="${fav.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
+                            <img src="/site/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
                         </div>`
-                    )
-                    .join("")}
-            </div>
-            <div id="image-modal" class="modal hidden">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
-                    <div class="modal-nav">
-                        <button id="prev-image" class="nav-btn">Prev</button>
-                        <button id="next-image" class="nav-btn">Next</button>
+                        )
+                        .join("")}
+                </div>
+                <div id="image-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
+                        <div class="modal-nav">
+                            <button id="prev-image" class="nav-btn">Prev</button>
+                            <button id="next-image" class="nav-btn">Next</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         `;
-    
-        const gridViewBtn = document.getElementById("grid-view");
-        const listViewBtn = document.getElementById("list-view");
-        const favoritesContainer = document.getElementById("favorites-container");
-        const modal = document.getElementById("image-modal");
-        const modalImage = document.getElementById("modal-image");
-        const closeModal = modal.querySelector(".close");
-        const prevImage = document.getElementById("prev-image");
-        const nextImage = document.getElementById("next-image");
-    
-        let currentImageIndex = 0;
-    
-        // Grid and List View Toggle
-        gridViewBtn.addEventListener("click", () => {
-            favoritesContainer.className = "grid grid-cols-3 gap-y-1 gap-x-1";
-        });
-    
-        listViewBtn.addEventListener("click", () => {
-            favoritesContainer.className = "list";
-            favoritesContainer.innerHTML = favorites
-                .map(
-                    (fav, index) => `
-                    <div class="list-view-item" data-index="${index}">
-                        <img src="${fav.url}" alt="Favorite Cat" class="w-24 h-24 object-cover clickable">
-                    </div>`
-                )
-                .join("");
-            attachClickHandlers();
-        });
-    
-        // Attach click handlers for modal opening
-        function attachClickHandlers() {
-            const clickableImages = document.querySelectorAll(".clickable");
-            clickableImages.forEach((img) => {
-                img.addEventListener("click", (e) => {
-                    const index = parseInt(e.target.closest("[data-index]").dataset.index, 10);
-                    openModal(index);
-                });
-            });
-        }
-    
-        attachClickHandlers();
-    
-        // Modal functionality
-        function openModal(index) {
-            currentImageIndex = index;
-            modalImage.src = favorites[currentImageIndex].url;
-            modal.classList.remove("hidden");
-        }
-    
-        function closeModalHandler() {
-            modal.classList.add("hidden");
-        }
-    
-        function navigateImages(direction) {
-            currentImageIndex = (currentImageIndex + direction + favorites.length) % favorites.length;
-            modalImage.src = favorites[currentImageIndex].url;
-        }
-    
-        closeModal.addEventListener("click", closeModalHandler);
-        prevImage.addEventListener("click", () => navigateImages(-1));
-        nextImage.addEventListener("click", () => navigateImages(1));
-    
-        // Close modal on outside click
-        window.addEventListener("click", (e) => {
-            if (e.target === modal) closeModalHandler();
-        });
-    }
-    
-
-
-    // Update for app.js
-document.addEventListener("DOMContentLoaded", () => {
-    const favoritesContainer = document.getElementById("favorites-container");
-
-    // Update Favorites View Rendering to Include Delete Icon
-    function loadFavorites() {
-        const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-        if (favorites.length === 0) {
-            content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
-            return;
-        }
-
-        content.innerHTML = `
-        <div class="favorites-tab-container">
-            <div class="view-toggle">
-                <button class="toggle-btn active" id="grid-view">Grid View</button>
-                <button class="toggle-btn" id="list-view">List View</button>
-            </div>
-            <div id="favorites-container" class="grid">
-                ${favorites
-                    .map(
-                        (fav, index) => `
-                        <div class="grid-view-item" data-index="${index}">
-                            <img src="${fav.url}" alt="Favorite Cat" class="clickable">
-                            <img src="/site/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
-                        </div>`
-                    )
-                    .join("")}
-            </div>
-        </div>`;
 
         attachDeleteHandlers();
+        attachClickHandlers();
+        attachViewToggleHandlers();
     }
 
     // Attach Delete Handlers
     function attachDeleteHandlers() {
-        const deleteIcons = document.querySelectorAll(".delete-icon");
-        deleteIcons.forEach((icon) => {
+        document.querySelectorAll(".delete-icon").forEach((icon) => {
             icon.addEventListener("click", (e) => {
                 const idToDelete = e.target.dataset.id;
                 deleteFavorite(idToDelete);
@@ -257,12 +238,59 @@ document.addEventListener("DOMContentLoaded", () => {
         loadFavorites();
     }
 
-    // Initial Load of Favorites
-    loadFavorites();
-});
+    // Attach Click Handlers for Modal Opening
+    function attachClickHandlers() {
+        const clickableImages = document.querySelectorAll(".clickable");
+        const modal = document.getElementById("image-modal");
+        const modalImage = document.getElementById("modal-image");
+        const closeModal = modal.querySelector(".close");
+        const prevImage = document.getElementById("prev-image");
+        const nextImage = document.getElementById("next-image");
 
+        let currentImageIndex = 0;
+        const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
+        clickableImages.forEach((img) => {
+            img.addEventListener("click", (e) => {
+                currentImageIndex = parseInt(e.target.closest("[data-index]").dataset.index, 10);
+                modalImage.src = favorites[currentImageIndex].url;
+                modal.classList.remove("hidden");
+            });
+        });
 
+        closeModal.addEventListener("click", () => modal.classList.add("hidden"));
+        prevImage.addEventListener("click", () => navigateImages(-1, favorites, modalImage));
+        nextImage.addEventListener("click", () => navigateImages(1, favorites, modalImage));
+    }
+
+    // Navigate Modal Images
+    function navigateImages(direction, favorites, modalImage) {
+        const length = favorites.length;
+        let currentImageIndex = favorites.findIndex((cat) => cat.url === modalImage.src);
+        currentImageIndex = (currentImageIndex + direction + length) % length;
+        modalImage.src = favorites[currentImageIndex].url;
+    }
+
+    // Attach View Toggle Handlers
+    function attachViewToggleHandlers() {
+        const gridViewBtn = document.getElementById("grid-view");
+        const listViewBtn = document.getElementById("list-view");
+        const favoritesContainer = document.getElementById("favorites-container");
+
+        gridViewBtn.addEventListener("click", () => {
+            listViewBtn.classList.remove("active");
+            gridViewBtn.classList.add("active");
+            favoritesContainer.classList.remove("list");
+            favoritesContainer.classList.add("grid");
+        });
+
+        listViewBtn.addEventListener("click", () => {
+            gridViewBtn.classList.remove("active");
+            listViewBtn.classList.add("active");
+            favoritesContainer.classList.remove("grid");
+            favoritesContainer.classList.add("list");
+        });
+    }
 
     // Show Toast Notification
     function showToast(message) {
