@@ -2,7 +2,7 @@ package controllers
 
 import (
 	channels "catApiProject/Channels"
-	"catApiProject/cache"
+	cache "catApiProject/caches"
 	"fmt"
 	"net/http"
 	"time"
