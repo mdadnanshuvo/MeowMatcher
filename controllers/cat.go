@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
 	"github.com/beego/beego/v2/server/web"
 )
 

@@ -10,6 +10,45 @@ import (
 	"time"
 )
 
+// WorkerPool fetches data concurrently with limited workers
+func WorkerPool(apiKey, baseURL string, breedIDs []string, limit int) ([]map[string]interface{}, error) {
+	var wg sync.WaitGroup
+	results := make(chan map[string]interface{}, len(breedIDs))
+	maxRetries := 3
+
+	for _, breedID := range breedIDs {
+		wg.Add(1)
+		go func(breedID string) {
+			defer wg.Done()
+
+			for retries := 0; retries < maxRetries; retries++ {
+				images, err := fetchBreedImages(apiKey, baseURL, breedID, limit)
+				if err != nil {
+					fmt.Printf("Retry %d for breed %s failed: %v\n", retries+1, breedID, err)
+					time.Sleep(2 * time.Second)
+					continue
+				}
+
+				results <- map[string]interface{}{"breed_id": breedID, "images": images}
+				return
+			}
+			fmt.Printf("Failed to fetch images for breed: %s after %d retries\n", breedID, maxRetries)
+		}(breedID)
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	var allResults []map[string]interface{}
+	for res := range results {
+		allResults = append(allResults, res)
+	}
+
+	return allResults, nil
+}
+
 // fetchDataFromAPI fetches data from a single API endpoint
 func fetchDataFromAPI(apiKey, baseURL, endpoint string, params map[string]string) ([]map[string]interface{}, error) {
 	client := &http.Client{}
@@ -83,45 +122,6 @@ func FetchDataConcurrently(apiKey, baseURL string, endpoints map[string]map[stri
 	}
 
 	return response, nil
-}
-
-// WorkerPool fetches data concurrently with limited workers
-func WorkerPool(apiKey, baseURL string, breedIDs []string, limit int) ([]map[string]interface{}, error) {
-	var wg sync.WaitGroup
-	results := make(chan map[string]interface{}, len(breedIDs))
-	maxRetries := 3
-
-	for _, breedID := range breedIDs {
-		wg.Add(1)
-		go func(breedID string) {
-			defer wg.Done()
-
-			for retries := 0; retries < maxRetries; retries++ {
-				images, err := fetchBreedImages(apiKey, baseURL, breedID, limit)
-				if err != nil {
-					fmt.Printf("Retry %d for breed %s failed: %v\n", retries+1, breedID, err)
-					time.Sleep(2 * time.Second)
-					continue
-				}
-
-				results <- map[string]interface{}{"breed_id": breedID, "images": images}
-				return
-			}
-			fmt.Printf("Failed to fetch images for breed: %s after %d retries\n", breedID, maxRetries)
-		}(breedID)
-	}
-
-	go func() {
-		wg.Wait()
-		close(results)
-	}()
-
-	var allResults []map[string]interface{}
-	for res := range results {
-		allResults = append(allResults, res)
-	}
-
-	return allResults, nil
 }
 
 // fetchBreedImages fetches images for a specific breed
