@@ -13,7 +13,8 @@ body {
 
 /* Main Container */
 main {
-    max-width: 800px;
+    max-width: 550px;
+    max-height: auto;
     margin: 40px auto;
     background: white;
     border-radius: 12px;
@@ -469,7 +470,7 @@ button.upvote:hover, button.downvote:hover {
 .carousel-images-wrapper {
     position: relative;
     overflow: hidden;
-    height: 500px; /* Adjust for appropriate vertical size */
+    height: 400px; /* Fixed height to control the overall carousel size */
     border-radius: 15px;
     margin-bottom: 20px;
     background: #f9f9f9;
@@ -477,6 +478,7 @@ button.upvote:hover, button.downvote:hover {
     justify-content: center;
     align-items: center;
 }
+
 
 /* Carousel Images Container */
 .carousel-images {
@@ -510,9 +512,10 @@ button.upvote:hover, button.downvote:hover {
 /* Individual Images */
 .carousel-img {
     flex: 0 0 100%; /* Ensure only one image is shown at a time */
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain; /* Maintain aspect ratio */
+    width: 100%; /* Fill the width of the container */
+    height: auto; /* Maintain aspect ratio */
+    max-height: 100%; /* Prevent overflow */
+    object-fit: contain; /* Ensure the image scales without cropping */
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, filter 0.3s ease;
