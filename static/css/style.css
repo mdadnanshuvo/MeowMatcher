@@ -493,135 +493,64 @@ button.upvote:hover, button.downvote:hover {
 
 
 
-/* Carousel Container */
-/* General Layout */
-.carousel {
+/* Breeds Carousel */
+.carousel-item {
+    position: relative;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.carousel-images {
     display: flex;
     overflow: hidden;
     position: relative;
-    width: 100%;
-    height: auto;
-    margin: 20px 0;
 }
 
-/* Carousel Items */
-.carousel-item {
-    min-width: 100%;
-    display: none;
-    flex-shrink: 0;
-    text-align: center;
-    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-}
-
-.carousel-item.active {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Image Styling */
 .carousel-img {
-    width: 80%;
-    max-height: 300px;
-    object-fit: cover;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    min-width: 100%;
+    transition: transform 0.3s ease;
+    border-radius: 12px;
 }
 
-/* Breed Details */
-.breed-details {
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-.breed-details h2 {
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.breed-details p {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 8px;
-}
-
-.breed-details .description {
-    font-size: 13px;
-    color: #777;
-}
-
-.breed-details .wiki-link {
-    font-size: 14px;
-    color: #0066cc;
-    text-decoration: none;
-}
-
-.breed-details .wiki-link:hover {
-    color: #0044aa;
-}
-
-/* Dots */
 .carousel-dots {
     display: flex;
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .dot {
     width: 12px;
     height: 12px;
-    background-color: #ccc;
-    border-radius: 50%;
     margin: 0 5px;
+    border-radius: 50%;
+    background-color: #ccc;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
 }
 
 .dot.active {
     background-color: #555;
-    transform: scale(1.2);
 }
 
-/* Search Input */
-.search-input {
-    width: 80%;
-    padding: 10px;
-    margin: 10px auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
-    display: block;
+/* Breed Details */
+.breed-details {
+    text-align: left;
+    margin-top: 20px;
 }
 
-.dropdown {
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 80%;
-    margin: 0 auto;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
+.breed-details h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
 }
 
-.dropdown.hidden {
-    display: none;
+.breed-details p {
+    margin-bottom: 5px;
 }
 
-.dropdown-item {
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+.wiki-link {
+    color: blue;
+    text-decoration: underline;
 }
 
-.dropdown-item:hover {
-    background-color: #f7f7f7;
-}

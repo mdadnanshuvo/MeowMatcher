@@ -18,8 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Load the Voting Tab
-   // Load the Voting Tab
+
 // Load the Voting Tab
 async function loadVoting() {
     showLoader(); // Show loading spinner while fetching the cat
@@ -106,101 +105,106 @@ async function loadVoting() {
     }
 
 
-
     async function loadBreeds() {
-        showLoader();
+        const content = document.getElementById("cat-content");
+        content.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div class="spinner"></div>
+                <p>Loading breeds...</p>
+            </div>`;
+        
         try {
             const response = await fetch("/breeds-with-images");
             if (!response.ok) throw new Error("Failed to fetch breeds data");
-    
+            
             const breeds = await response.json();
             renderBreeds(breeds);
         } catch (error) {
-            content.innerHTML = "<p>Could not load breeds. Try again!</p>";
+            content.innerHTML = `<p>Failed to load breeds. Please try again!</p>`;
             console.error("Error loading breeds:", error);
         }
     }
     
+
+
     function renderBreeds(breeds) {
-        content.innerHTML = `
-            <div id="breeds-container">
-                ${breeds
-                    .map(
-                        (breed, index) => `
-                        <div class="carousel-item ${index === 0 ? "active" : ""}" data-index="${index}">
-                            <div class="carousel-images" id="carousel-${breed.id}">
-                                ${breed.images
-                                    .map(
-                                        (image, imgIndex) => `
-                                        <img src="${image.url}" alt="${breed.name} Image ${imgIndex + 1}" class="carousel-img ${imgIndex === 0 ? "active" : ""}">
-                                    `
-                                    )
-                                    .join("")}
-                            </div>
-                            <div class="carousel-dots" id="dots-${breed.id}">
-                                ${breed.images
-                                    .map(
-                                        (_, imgIndex) => `
-                                        <span class="dot ${imgIndex === 0 ? "active" : ""}" data-index="${imgIndex}" data-breed="${breed.id}"></span>
-                                    `
-                                    )
-                                    .join("")}
-                            </div>
-                            <div class="breed-details">
-                                <h2>${breed.name}</h2>
-                                <p><strong>Origin:</strong> ${breed.origin}</p>
-                                <p><strong>Life Span:</strong> ${breed.life_span} years</p>
-                                <p><strong>Temperament:</strong> ${breed.temperament}</p>
-                                <p class="description">${breed.description}</p>
-                                <a href="${breed.wikipedia_url}" target="_blank" class="wiki-link">Learn more on Wikipedia</a>
-                            </div>
-                        </div>`
-                    )
-                    .join("")}
+        const content = document.getElementById("cat-content");
+        content.innerHTML = breeds.map((breed, index) => `
+            <div class="carousel-item ${index === 0 ? "active" : ""}">
+                <div class="carousel-images" id="carousel-${breed.id}">
+                    ${breed.images.map((image, imgIndex) => `
+                        <img 
+                            src="${image.url}" 
+                            alt="${breed.name} Image ${imgIndex + 1}" 
+                            class="carousel-img ${imgIndex === 0 ? "active" : ""}">
+                    `).join("")}
+                </div>
+                <div class="carousel-dots" id="dots-${breed.id}">
+                    ${breed.images.map((_, imgIndex) => `
+                        <span 
+                            class="dot ${imgIndex === 0 ? "active" : ""}" 
+                            data-index="${imgIndex}" 
+                            data-breed="${breed.id}">
+                        </span>
+                    `).join("")}
+                </div>
+                <div class="breed-details">
+                    <h2>${breed.name}</h2>
+                    <p><strong>Origin:</strong> ${breed.origin}</p>
+                    <p><strong>Life Span:</strong> ${breed.life_span} years</p>
+                    <p><strong>Temperament:</strong> ${breed.temperament}</p>
+                    <p class="description">${breed.description}</p>
+                    <a href="${breed.wikipedia_url}" target="_blank" class="wiki-link">Learn more on Wikipedia</a>
+                </div>
             </div>
-        `;
+        `).join("");
     
+        // Initialize carousel functionality
         breeds.forEach((breed) => {
             initializeCarouselForBreed(breed.id, breed.images.length);
         });
     }
     
+
     function initializeCarouselForBreed(breedId, imageCount) {
         const carousel = document.getElementById(`carousel-${breedId}`);
         const dots = document.querySelectorAll(`#dots-${breedId} .dot`);
+        const items = carousel.querySelectorAll(".carousel-img");
         let currentIndex = 0;
     
         const updateCarousel = (index) => {
-            const images = carousel.querySelectorAll(".carousel-img");
-            images.forEach((img, i) => img.classList.toggle("active", i === index));
+            const translateX = -(index * 100); // Adjust for horizontal swipe
+            items.forEach((item) => {
+                item.style.transform = `translateX(${translateX}%)`;
+            });
             dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
-        };
-    
-        const goToIndex = (index) => {
-            currentIndex = index;
-            updateCarousel(currentIndex);
         };
     
         dots.forEach((dot) => {
             dot.addEventListener("click", () => {
                 const index = parseInt(dot.dataset.index, 10);
-                goToIndex(index);
+                currentIndex = index;
+                updateCarousel(index);
             });
         });
     
-        const autoSwipe = () => {
+        let interval = setInterval(() => {
             currentIndex = (currentIndex + 1) % imageCount;
             updateCarousel(currentIndex);
-        };
-    
-        let interval = setInterval(autoSwipe, 3000);
+        }, 3000);
     
         carousel.addEventListener("mouseenter", () => clearInterval(interval));
         carousel.addEventListener("mouseleave", () => {
-            interval = setInterval(autoSwipe, 3000);
+            interval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % imageCount;
+                updateCarousel(currentIndex);
+            }, 3000);
         });
+    
+        updateCarousel(currentIndex);
     }
     
+
 
   
     // Load Favorites Tab
