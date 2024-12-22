@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"bytes"
 	channels "catApiProject/Channels"
-	"encoding/json"
+	"catApiProject/cache"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/beego/beego/v2/server/web"
 )
@@ -14,25 +14,23 @@ type CatController struct {
 	web.Controller
 }
 
-// Render the index page
+var breedsCache = cache.NewCache(10 * time.Minute)
+
+// Index renders the homepage
 func (c *CatController) Index() {
 	c.TplName = "index.tpl"
 	c.Data["Title"] = "Welcome to the Cat API"
 	c.Data["Message"] = "Explore voting, breeds, and favorites!"
 }
 
-// VotingCats provides voting data as JSON
+// VotingCats fetches voting data
 func (c *CatController) VotingCats() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
 	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
 
-	// Define the endpoint for voting data
-	endpoints := map[string]map[string]string{
-		"/images/search": {"limit": "10"},
-	}
-
-	// Fetch voting data concurrently using the channels package
-	data, err := channels.FetchDataConcurrently(apiKey, baseURL, endpoints)
+	data, err := channels.FetchDataConcurrently(apiKey, baseURL, map[string]map[string]string{
+		"/images/search": {"limit": "10", "order": "RAND"},
+	})
 	if err != nil {
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -40,23 +38,18 @@ func (c *CatController) VotingCats() {
 		return
 	}
 
-	// Return only the voting data as JSON
 	c.Data["json"] = data["/images/search"]
 	c.ServeJSON()
 }
 
-// Breeds provides breeds data as JSON
+// Breeds fetches all breeds
 func (c *CatController) Breeds() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
 	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
 
-	// Define the endpoint for breeds data
-	endpoints := map[string]map[string]string{
+	data, err := channels.FetchDataConcurrently(apiKey, baseURL, map[string]map[string]string{
 		"/breeds": nil,
-	}
-
-	// Fetch breeds data concurrently using the channels package
-	data, err := channels.FetchDataConcurrently(apiKey, baseURL, endpoints)
+	})
 	if err != nil {
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -64,92 +57,93 @@ func (c *CatController) Breeds() {
 		return
 	}
 
-	// Return only the breeds data as JSON
 	c.Data["json"] = data["/breeds"]
 	c.ServeJSON()
 }
 
-// Favorites provides a placeholder list of favorite cats
-func (c *CatController) Favorites() {
-	favorites := []map[string]string{
-		{"id": "1", "url": "https://example.com/cat1.jpg"},
-		{"id": "2", "url": "https://example.com/cat2.jpg"},
+// BreedsWithImages fetches breeds with associated images
+func (c *CatController) BreedsWithImages() {
+	if cachedData, found := breedsCache.Get("breeds_with_images"); found {
+		if isValidCache(cachedData) {
+			c.Data["json"] = cachedData
+			c.ServeJSON()
+			return
+		}
 	}
 
-	// Return favorites as JSON
-	c.Data["json"] = favorites
-	c.ServeJSON()
-}
-
-// AddFavorite adds a new favorite cat via POST request
-func (c *CatController) AddFavorite() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
 	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
 
-	// Parse the incoming JSON request body
-	var requestBody struct {
-		ImageID string `json:"image_id"`
-		SubID   string `json:"sub_id,omitempty"`
-	}
-	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &requestBody); err != nil {
-		c.Ctx.Output.SetStatus(http.StatusBadRequest)
-		c.Data["json"] = map[string]string{"error": "Invalid request body"}
-		c.ServeJSON()
-		return
-	}
-
-	// Prepare the data for the POST request
-	favoriteData := map[string]interface{}{
-		"image_id": requestBody.ImageID,
-		"sub_id":   requestBody.SubID,
-	}
-
-	// Make the POST request to the Cat API
-	client := &http.Client{}
-	body, err := json.Marshal(favoriteData)
+	// Fetch all breeds
+	breedsData, err := channels.FetchDataConcurrently(apiKey, baseURL, map[string]map[string]string{
+		"/breeds": nil,
+	})
 	if err != nil {
+		fmt.Println("Error fetching breeds:", err)
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to encode request body"}
+		c.Data["json"] = map[string]string{"error": "Failed to fetch breeds"}
 		c.ServeJSON()
 		return
 	}
 
-	req, err := http.NewRequest("POST", baseURL+"/favourites", bytes.NewBuffer(body))
+	breeds, ok := breedsData["/breeds"].([]map[string]interface{})
+	if !ok {
+		fmt.Println("Invalid breeds data format")
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Invalid breeds data format"}
+		c.ServeJSON()
+		return
+	}
+
+	// Fetch images with worker pool
+	breedIDs := make([]string, len(breeds))
+	for i, breed := range breeds {
+		breedIDs[i] = breed["id"].(string)
+	}
+
+	imagesData, err := channels.WorkerPool(apiKey, baseURL, breedIDs, 10)
 	if err != nil {
+		fmt.Println("Error fetching images:", err)
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to create request"}
+		c.Data["json"] = map[string]string{"error": "Failed to fetch images"}
 		c.ServeJSON()
 		return
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", apiKey)
+	// Map images to breeds
+	for i, breed := range breeds {
+		breedID := breed["id"].(string)
+		breedImages := []map[string]interface{}{}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to connect to Cat API"}
-		c.ServeJSON()
-		return
-	}
-	defer resp.Body.Close()
+		for _, imgData := range imagesData {
+			if imgData["breed_id"] == breedID {
+				breedImages = append(breedImages, imgData["images"].([]map[string]interface{})...)
+			}
+		}
 
-	if resp.StatusCode != http.StatusOK {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": fmt.Sprintf("Failed to create favorite. Status: %d", resp.StatusCode)}
-		c.ServeJSON()
-		return
-	}
+		if len(breedImages) == 0 {
+			fmt.Printf("No images mapped for breed: %s\n", breedID)
+		}
 
-	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to decode response from Cat API"}
-		c.ServeJSON()
-		return
+		breed["images"] = breedImages
+		breeds[i] = breed
 	}
 
-	// Return the response from the Cat API as JSON
-	c.Data["json"] = result
+	breedsCache.Set("breeds_with_images", breeds)
+	c.Data["json"] = breeds
 	c.ServeJSON()
+}
+
+func isValidCache(data interface{}) bool {
+	breeds, ok := data.([]map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	for _, breed := range breeds {
+		if breed["images"] == nil {
+			return false
+		}
+	}
+	return true
 }

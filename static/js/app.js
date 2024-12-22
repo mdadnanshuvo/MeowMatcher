@@ -19,21 +19,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Load the Voting Tab
-    async function loadVoting() {
-        const cachedVotingData = JSON.parse(localStorage.getItem("votingData"));
-        if (cachedVotingData) {
-            renderCat(cachedVotingData);
+   // Load the Voting Tab
+// Load the Voting Tab
+async function loadVoting() {
+    showLoader(); // Show loading spinner while fetching the cat
+    try {
+        const cat = await fetchRandomCat(); // Fetch a random cat
+        if (cat) {
+            renderCat(cat); // Render the fetched cat
         } else {
-            showLoader();
-            const cat = await fetchRandomCat();
-            if (cat) {
-                localStorage.setItem("votingData", JSON.stringify(cat));
-                renderCat(cat);
-            } else {
-                content.innerHTML = "<p>Could not load cat. Try again!</p>";
-            }
+            content.innerHTML = "<p>Could not load cat. Try again!</p>";
         }
+    } catch (error) {
+        content.innerHTML = "<p>Failed to load the voting tab. Please try again!</p>";
     }
+}
+
 
     // Show Loader Animation
     function showLoader() {
@@ -48,15 +49,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fetch a Random Cat
     async function fetchRandomCat() {
         try {
-            const response = await fetch("/voting");
+            const response = await fetch("/voting"); // Fetch random cat
             if (!response.ok) throw new Error("Failed to fetch cat image");
             const data = await response.json();
             return data[0];
         } catch (error) {
+            console.error("Error fetching random cat:", error);
             showToast("Failed to load cat. Please try again!");
             return null;
         }
     }
+    
 
     // Render Cat Content
     function renderCat(cat) {
@@ -102,77 +105,104 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Load Breeds Tab
+
+
     async function loadBreeds() {
         showLoader();
         try {
-            const response = await fetch("/breeds");
+            const response = await fetch("/breeds-with-images");
             if (!response.ok) throw new Error("Failed to fetch breeds data");
+    
             const breeds = await response.json();
             renderBreeds(breeds);
         } catch (error) {
             content.innerHTML = "<p>Could not load breeds. Try again!</p>";
+            console.error("Error loading breeds:", error);
         }
     }
-
-    // Render Breeds Content
+    
     function renderBreeds(breeds) {
         content.innerHTML = `
-            <div class="breeds-search">
-                <input type="text" id="breed-search" placeholder="Search Breeds">
-                <button id="breed-clear">X</button>
-            </div>
-            <div id="breeds-container" class="gallery">
+            <div id="breeds-container">
                 ${breeds
                     .map(
                         (breed, index) => `
-                        <div class="gallery-item ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${breed.image?.url || 'placeholder.jpg'}" alt="${breed.name}">
-                            <div class="breed-info">
-                                <h3>${breed.name}</h3>
-                                <p>${breed.origin}</p>
-                                <p>${breed.description}</p>
-                                <a href="${breed.wikipedia_url}" target="_blank">Wikipedia</a>
+                        <div class="carousel-item ${index === 0 ? "active" : ""}" data-index="${index}">
+                            <div class="carousel-images" id="carousel-${breed.id}">
+                                ${breed.images
+                                    .map(
+                                        (image, imgIndex) => `
+                                        <img src="${image.url}" alt="${breed.name} Image ${imgIndex + 1}" class="carousel-img ${imgIndex === 0 ? "active" : ""}">
+                                    `
+                                    )
+                                    .join("")}
+                            </div>
+                            <div class="carousel-dots" id="dots-${breed.id}">
+                                ${breed.images
+                                    .map(
+                                        (_, imgIndex) => `
+                                        <span class="dot ${imgIndex === 0 ? "active" : ""}" data-index="${imgIndex}" data-breed="${breed.id}"></span>
+                                    `
+                                    )
+                                    .join("")}
+                            </div>
+                            <div class="breed-details">
+                                <h2>${breed.name}</h2>
+                                <p><strong>Origin:</strong> ${breed.origin}</p>
+                                <p><strong>Life Span:</strong> ${breed.life_span} years</p>
+                                <p><strong>Temperament:</strong> ${breed.temperament}</p>
+                                <p class="description">${breed.description}</p>
+                                <a href="${breed.wikipedia_url}" target="_blank" class="wiki-link">Learn more on Wikipedia</a>
                             </div>
                         </div>`
                     )
                     .join("")}
-                <div class="gallery-dots">
-                    ${breeds.map((_, index) => `<span class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`).join("")}
-                </div>
             </div>
         `;
-
-        initializeGallery();
-    }
-
-    function initializeGallery() {
-        const items = document.querySelectorAll(".gallery-item");
-        const dots = document.querySelectorAll(".gallery-dots .dot");
-        let currentIndex = 0;
-
-        const updateGallery = (index) => {
-            items.forEach((item, i) => item.classList.toggle("active", i === index));
-            dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
-        };
-
-        const autoSwipe = () => {
-            currentIndex = (currentIndex + 1) % items.length;
-            updateGallery(currentIndex);
-        };
-
-        let interval = setInterval(autoSwipe, 3000);
-
-        dots.forEach((dot) => {
-            dot.addEventListener("click", (e) => {
-                clearInterval(interval);
-                currentIndex = parseInt(e.target.dataset.index, 10);
-                updateGallery(currentIndex);
-                interval = setInterval(autoSwipe, 3000);
-            });
+    
+        breeds.forEach((breed) => {
+            initializeCarouselForBreed(breed.id, breed.images.length);
         });
     }
+    
+    function initializeCarouselForBreed(breedId, imageCount) {
+        const carousel = document.getElementById(`carousel-${breedId}`);
+        const dots = document.querySelectorAll(`#dots-${breedId} .dot`);
+        let currentIndex = 0;
+    
+        const updateCarousel = (index) => {
+            const images = carousel.querySelectorAll(".carousel-img");
+            images.forEach((img, i) => img.classList.toggle("active", i === index));
+            dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+        };
+    
+        const goToIndex = (index) => {
+            currentIndex = index;
+            updateCarousel(currentIndex);
+        };
+    
+        dots.forEach((dot) => {
+            dot.addEventListener("click", () => {
+                const index = parseInt(dot.dataset.index, 10);
+                goToIndex(index);
+            });
+        });
+    
+        const autoSwipe = () => {
+            currentIndex = (currentIndex + 1) % imageCount;
+            updateCarousel(currentIndex);
+        };
+    
+        let interval = setInterval(autoSwipe, 3000);
+    
+        carousel.addEventListener("mouseenter", () => clearInterval(interval));
+        carousel.addEventListener("mouseleave", () => {
+            interval = setInterval(autoSwipe, 3000);
+        });
+    }
+    
 
+  
     // Load Favorites Tab
     function loadFavorites() {
         const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
