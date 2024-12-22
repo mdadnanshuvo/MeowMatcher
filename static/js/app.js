@@ -129,15 +129,31 @@ async function loadVoting() {
 
     function renderBreeds(breeds) {
         const content = document.getElementById("cat-content");
-        content.innerHTML = breeds.map((breed, index) => `
-            <div class="carousel-item ${index === 0 ? "active" : ""}">
-                <div class="carousel-images" id="carousel-${breed.id}">
-                    ${breed.images.map((image, imgIndex) => `
-                        <img 
-                            src="${image.url}" 
-                            alt="${breed.name} Image ${imgIndex + 1}" 
-                            class="carousel-img ${imgIndex === 0 ? "active" : ""}">
-                    `).join("")}
+    
+        // Assuming only one breed is displayed
+        const breed = breeds[0];
+        content.innerHTML = `
+            <div class="breeds-search">
+                <input 
+                    type="text" 
+                    id="breed-search" 
+                    class="search-input" 
+                    placeholder="Search ${breed.name}" 
+                    autocomplete="off">
+                <ul id="suggestions" class="suggestions-list"></ul>
+            </div>
+            <div class="carousel-item">
+                <div class="carousel-images-wrapper">
+                    <div class="carousel-images" id="carousel-${breed.id}">
+                        ${breed.images.map((image, imgIndex) => `
+                            <img 
+                                src="${image.url}" 
+                                alt="${breed.name} Image ${imgIndex + 1}" 
+                                class="carousel-img ${imgIndex === 0 ? "active" : ""}">
+                        `).join("")}
+                    </div>
+                    <div class="carousel-nav left" id="left-nav-${breed.id}">&lt;</div>
+                    <div class="carousel-nav right" id="right-nav-${breed.id}">&gt;</div>
                 </div>
                 <div class="carousel-dots" id="dots-${breed.id}">
                     ${breed.images.map((_, imgIndex) => `
@@ -157,54 +173,96 @@ async function loadVoting() {
                     <a href="${breed.wikipedia_url}" target="_blank" class="wiki-link">Learn more on Wikipedia</a>
                 </div>
             </div>
-        `).join("");
+        `;
     
-        // Initialize carousel functionality
-        breeds.forEach((breed) => {
-            initializeCarouselForBreed(breed.id, breed.images.length);
-        });
+        initializeCarouselForBreed(breed.id, breed.images.length);
+        setupSearchBar(breeds); // Initialize search bar functionality
     }
     
-
+    
+    
     function initializeCarouselForBreed(breedId, imageCount) {
         const carousel = document.getElementById(`carousel-${breedId}`);
         const dots = document.querySelectorAll(`#dots-${breedId} .dot`);
         const items = carousel.querySelectorAll(".carousel-img");
+        const leftNav = document.getElementById(`left-nav-${breedId}`);
+        const rightNav = document.getElementById(`right-nav-${breedId}`);
         let currentIndex = 0;
     
         const updateCarousel = (index) => {
-            const translateX = -(index * 100); // Adjust for horizontal swipe
-            items.forEach((item) => {
-                item.style.transform = `translateX(${translateX}%)`;
-            });
+            const translateX = -(index * 100); // Shift by 100% for each image
+            carousel.style.transform = `translateX(${translateX}%)`;
             dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
         };
     
-        dots.forEach((dot) => {
-            dot.addEventListener("click", () => {
-                const index = parseInt(dot.dataset.index, 10);
-                currentIndex = index;
-                updateCarousel(index);
-            });
-        });
-    
-        let interval = setInterval(() => {
+        const goToNext = () => {
             currentIndex = (currentIndex + 1) % imageCount;
             updateCarousel(currentIndex);
-        }, 3000);
+        };
+    
+        const goToPrev = () => {
+            currentIndex = (currentIndex - 1 + imageCount) % imageCount;
+            updateCarousel(currentIndex);
+        };
+    
+        rightNav.addEventListener("click", goToNext);
+        leftNav.addEventListener("click", goToPrev);
+    
+        let interval = setInterval(goToNext, 3000);
     
         carousel.addEventListener("mouseenter", () => clearInterval(interval));
         carousel.addEventListener("mouseleave", () => {
-            interval = setInterval(() => {
-                currentIndex = (currentIndex + 1) % imageCount;
-                updateCarousel(currentIndex);
-            }, 3000);
+            interval = setInterval(goToNext, 3000);
         });
     
         updateCarousel(currentIndex);
     }
     
+   
 
+    function setupSearchBar(breeds) {
+        const searchInput = document.getElementById("breed-search");
+        const suggestionsList = document.getElementById("suggestions");
+    
+        // Populate suggestions when the search bar is focused
+        searchInput.addEventListener("focus", () => {
+            renderSuggestions(breeds);
+        });
+    
+        // Handle input typing for dynamic suggestions
+        searchInput.addEventListener("input", (e) => {
+            const query = e.target.value.toLowerCase();
+            const filteredBreeds = breeds.filter((breed) =>
+                breed.name.toLowerCase().includes(query)
+            );
+            renderSuggestions(filteredBreeds);
+        });
+    
+        // Handle suggestion click
+        suggestionsList.addEventListener("click", (e) => {
+            if (e.target.classList.contains("suggestion-item")) {
+                const selectedBreed = breeds.find((breed) => breed.name === e.target.textContent.trim());
+                if (selectedBreed) renderBreeds([selectedBreed]); // Re-render with selected breed
+                suggestionsList.style.display = "none"; // Hide suggestions after selection
+            }
+        });
+    
+        // Close suggestions when clicking outside
+        document.addEventListener("click", (e) => {
+            if (!suggestionsList.contains(e.target) && e.target !== searchInput) {
+                suggestionsList.style.display = "none";
+            }
+        });
+    
+        // Helper to render suggestions
+        function renderSuggestions(filteredBreeds) {
+            suggestionsList.innerHTML = filteredBreeds
+                .map((breed) => `<li class="suggestion-item">${breed.name}</li>`)
+                .join("");
+            suggestionsList.style.display = filteredBreeds.length ? "block" : "none";
+        }
+    }
+    
 
   
     // Load Favorites Tab

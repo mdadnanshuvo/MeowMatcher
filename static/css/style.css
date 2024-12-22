@@ -465,61 +465,88 @@ button.upvote:hover, button.downvote:hover {
 }
 
 
-/* Gallery Dots */
-.gallery-dots {
+/* Carousel Wrapper */
+.carousel-images-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 500px; /* Adjust for appropriate vertical size */
+    border-radius: 15px;
+    margin-bottom: 20px;
+    background: #f9f9f9;
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    align-items: center;
 }
 
-.dot {
-    width: 10px;
-    height: 10px;
-    background-color: #ccc;
-    border-radius: 50%;
-    margin: 0 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+/* Carousel Images Container */
+.carousel-images {
+    display: flex;
+    transition: transform 0.5s ease;
+    width: 100%; /* Ensure all images fit inside the container */
 }
-
-.dot.active {
-    background-color: #555;
-    transform: scale(1.2);
-}
-
-.dot:hover {
-    background-color: #777;
-}
-
 
 
 /* Breeds Carousel */
 .carousel-item {
     position: relative;
-    margin: 20px 0;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
+    margin: 30px auto;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #ffffff, #f7f9fc);
+    transition: box-shadow 0.4s ease, transform 0.4s ease;
+    max-width: 800px;
 }
 
-.carousel-images {
-    display: flex;
-    overflow: hidden;
-    position: relative;
+.carousel-item:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    transform: scale(1.03);
 }
 
+
+
+
+
+/* Individual Images */
 .carousel-img {
-    min-width: 100%;
-    transition: transform 0.3s ease;
+    flex: 0 0 100%; /* Ensure only one image is shown at a time */
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain; /* Maintain aspect ratio */
     border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, filter 0.3s ease;
 }
 
+
+.carousel-img:hover {
+    transform: scale(1.05); /* Slight zoom on hover */
+    filter: brightness(1.1); /* Slight brightness increase */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Overlay Effect (Optional) */
+.carousel-images::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1); /* Subtle overlay for depth */
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Carousel Dots */
 .carousel-dots {
     display: flex;
     justify-content: center;
-    margin-top: 10px;
+    gap: 10px;
+    margin-top: 15px;
 }
+
+
 
 .dot {
     width: 12px;
@@ -528,11 +555,82 @@ button.upvote:hover, button.downvote:hover {
     border-radius: 50%;
     background-color: #ccc;
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
+
+
 .dot.active {
-    background-color: #555;
+    background-color: #43a047; /* Standout green for active dot */
+    transform: scale(1.3); /* Eye-catching size for active */
 }
+
+.dot:hover {
+    background-color: #2e7d32; /* Darker green for hover */
+    transform: scale(1.2);
+}
+
+
+/* Navigation Arrows */
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(67, 160, 71, 0.8);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 20px;
+}
+
+
+.carousel-nav:hover {
+    background-color: #2e7d32;
+    transform: scale(1.1);
+}
+
+.carousel-nav.left {
+    left: 10px;
+}
+
+.carousel-nav.right {
+    right: 10px;
+}
+
+.carousel-nav svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .carousel-images {
+        height: 200px; /* Smaller height for mobile screens */
+    }
+
+    .carousel-nav {
+        width: 30px;
+        height: 30px;
+    }
+
+    .carousel-nav svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+
+
+
+
+
 
 /* Breed Details */
 .breed-details {
@@ -554,3 +652,79 @@ button.upvote:hover, button.downvote:hover {
     text-decoration: underline;
 }
 
+
+
+/* Search Bar Styling */
+/* Enhanced Search Bar Styling */
+.breeds-search {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    outline: none;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #333;
+    background-color: #f9fff9;
+}
+
+.search-input:focus {
+    border-color: #2e7d32;
+    box-shadow: 0 6px 12px rgba(46, 125, 50, 0.3);
+}
+
+/* Suggestions List Styling */
+.suggestions-list {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    margin-top: 5px;
+    padding: 0;
+    list-style: none;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    color: #555;
+    font-size: 16px;
+    background-color: #f9fff9;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.suggestion-item:hover {
+    background-color: #4caf50;
+    color: #fff;
+}
+
+
+
+@media (max-width: 768px) {
+    .search-input {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .carousel-images {
+        height: 200px;
+    }
+
+    .carousel-img {
+        object-fit: contain;
+    }
+}
