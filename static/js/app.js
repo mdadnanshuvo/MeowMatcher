@@ -380,10 +380,10 @@ async function loadVoting() {
             <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
                 <div class="view-toggle flex py-4 bg-white gap-2">
                     <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
-                        <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">
+                        <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">Grid View
                     </button>
                     <button class="toggle-btn" id="list-view" role="button" tabindex="0">
-                        <img src="/static/icons/list-view.png" alt="List View" class="view-icon">
+                        <img src="/static/icons/list-view.png" alt="List View" class="view-icon">List View
                     </button>
                 </div>
                 <div id="favorites-container" class="grid">

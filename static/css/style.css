@@ -203,6 +203,7 @@ button.upvote:hover, button.downvote:hover {
     display: flex;
     align-items: center;
     padding: 10px 15px;
+    margin: 10px;
     border: 1px solid #ddd;
     background: #f9f9f9;
     border-radius: 5px;
