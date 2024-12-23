@@ -680,25 +680,72 @@ button.upvote:hover, button.downvote:hover {
 
 
 
-
 /* Breed Details */
 .breed-details {
-    text-align: left;
+    text-align: center; /* Center-align all text */
     margin-top: 20px;
+    padding: 20px;
+    background: #f9f9f9; /* Light gray background for contrast */
+    border-radius: 10px; /* Rounded corners for a modern look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    font-family: 'Arial', sans-serif; /* Clean font */
 }
 
 .breed-details h2 {
-    font-size: 20px;
-    margin-bottom: 10px;
+    font-size: 24px; /* Larger font size for heading */
+    margin-bottom: 15px; /* Space below heading */
+    color: #333; /* Dark gray for professional look */
+    font-weight: bold; /* Make heading bold */
 }
 
 .breed-details p {
-    margin-bottom: 5px;
+    margin-bottom: 10px; /* Space between paragraphs */
+    font-size: 16px; /* Standard font size for readability */
+    color: #555; /* Medium gray for text */
+    line-height: 1.6; /* Improve line spacing for readability */
+}
+
+.breed-details .description {
+    font-style: italic; /* Add emphasis to descriptions */
+    color: #666; /* Slightly lighter gray for descriptions */
 }
 
 .wiki-link {
-    color: blue;
-    text-decoration: underline;
+    color: #0073e6; /* Professional blue for links */
+    text-decoration: none; /* Remove default underline */
+    font-weight: bold; /* Make link text bold */
+    transition: color 0.3s ease; /* Smooth color transition on hover */
+}
+
+.wiki-link:hover {
+    color: #005bb5; /* Darker blue on hover for contrast */
+    text-decoration: underline; /* Add underline on hover */
+}
+
+/* Add a divider line for separation */
+.breed-details hr {
+    margin: 20px 0;
+    border: 0;
+    height: 1px;
+    background: #ddd; /* Light gray divider */
+    width: 80%; /* Constrain width of the divider */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Add responsive styling for smaller devices */
+@media (max-width: 768px) {
+    .breed-details {
+        padding: 15px;
+    }
+
+    .breed-details h2 {
+        font-size: 20px;
+    }
+
+    .breed-details p {
+        font-size: 14px;
+    }
 }
 
 
