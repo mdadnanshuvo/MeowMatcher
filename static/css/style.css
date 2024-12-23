@@ -967,72 +967,59 @@ button.upvote:hover, button.downvote:hover {
 }
 
 
-/* Styling for Actions Section */
-.actions {
+.image-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+    background: black;
+}
+
+.image-overlay {
+    position: absolute;
+    bottom: 10px; /* Position the buttons at the bottom */
+    left: 0;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background: #f9f9f9; /* Subtle background color */
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+    padding: 0 10px;
+    background: none; /* No background for the overlay */
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* Icons Container */
-.left-icons, .right-icons {
+.image-container:hover .image-overlay {
+    opacity: 1;
+}
+
+button {
+    background: black;
+    border: none;
+    cursor: pointer;
     display: flex;
-    gap: 15px; /* Spacing between icons */
     align-items: center;
+    padding: 0;
+    border-radius: 50%;
+   
 }
 
-/* Button Styling */
-button.heart, button.upvote, button.downvote {
-    width: 60px; /* Set consistent width for buttons */
-    height: 60px; /* Set consistent height for buttons */
-    background-color: transparent; /* No background to highlight the icon */
-    border: none; /* Remove button borders */
-    cursor: pointer; /* Pointer cursor for interaction */
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
-    border-radius: 10%; /* Rounded buttons */
+button img {
+    width: 30px;
+    height: 30px;
+    transition: transform 0.2s ease;
+    
 }
 
-/* Icon Styling */
-button.heart img, button.upvote img, button.downvote img {
-    width: 100%; /* Fit the icon inside the button */
-    height: 100%;
-    object-fit: contain; /* Ensure icons scale properly */
-    border-radius: 0%; /* No rounding */
-    box-shadow: none; /* Remove shadow for clear visibility */
-    padding: 0; /* Remove any padding */
+button:hover img {
+    transform: scale(1.1); /* Slight zoom effect on hover */
 }
 
-/* Hover Effects */
-button.heart:hover img {
-    transform: scale(1.1); /* Slight zoom-in effect */
+.heart {
+    margin-left: 0;
 }
 
-button.upvote:hover img {
-    transform: scale(1.1); /* Slight zoom-in effect */
-}
-
-button.downvote:hover img {
-    transform: scale(1.1); /* Slight zoom-in effect */
-}
-
-/* Focus Effects */
-button.heart:focus img, button.upvote:focus img, button.downvote:focus img {
-    outline: none; /* No focus outline */
-    transform: scale(1.15); /* Slightly larger scale for focus */
-}
-
-/* Additional Alignment for Mobile */
-@media (max-width: 768px) {
-    .actions {
-        flex-direction: column; /* Stack actions vertically on smaller screens */
-        gap: 15px;
-    }
-    button.heart, button.upvote, button.downvote {
-        width: 40px; /* Smaller size for smaller screens */
-        height: 40px;
-    }
+.right-buttons {
+    display: flex;
+    gap: 10px; /* Space between like and dislike buttons */
 }

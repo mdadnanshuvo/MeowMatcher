@@ -160,15 +160,16 @@ async function loadVoting() {
     // Render Cat Content
     function renderCat(cat) {
         content.innerHTML = `
-            <div class="card" id="cat-${cat.id}">
-                <img src="${cat.url}" alt="Random Cat">
-               <div class="actions">
-                <div class="left-icons">
-                    <button class="heart" data-id="${cat.id}" data-cat='${JSON.stringify(cat)}'>
-                        <img src="/static/icons/heart.png" alt="Heart Icon">
-                    </button>
-                </div>
-                <div class="right-icons">
+    <div class="card" id="cat-${cat.id}">
+        <div class="image-container">
+            <img src="${cat.url}" alt="Random Cat" class="cat-image">
+            <div class="image-overlay">
+                <!-- Heart Button -->
+                <button class="heart" data-id="${cat.id}" data-cat='${JSON.stringify(cat)}'>
+                    <img src="/static/icons/heart.png" alt="Heart Icon">
+                </button>
+                <!-- Like and Dislike Buttons -->
+                <div class="right-buttons">
                     <button class="upvote" data-id="${cat.id}">
                         <img src="/static/icons/like.png" alt="Like Icon">
                     </button>
@@ -177,24 +178,28 @@ async function loadVoting() {
                     </button>
                 </div>
             </div>
-            </div>
-        `;
+        </div>
+    </div>
+`;
 
+
+    
+        // Event listeners for heart, upvote, and downvote buttons
         document.querySelector(".heart").addEventListener("click", () => {
             saveFavorite(cat);
             localStorage.removeItem("votingData"); // Clear cache after action
             loadVoting();
         });
-
+    
         document.querySelector(".upvote").addEventListener("click", () => {
             showToast("You upvoted this cat!");
         });
-
+    
         document.querySelector(".downvote").addEventListener("click", () => {
             showToast("You downvoted this cat!");
         });
     }
-
+    
     // Save Cat to Favorites
     function saveFavorite(cat) {
         const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
