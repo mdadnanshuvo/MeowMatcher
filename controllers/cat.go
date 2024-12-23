@@ -238,3 +238,68 @@ func (c *CatController) AddToFavorites() {
 	c.Data["json"] = map[string]string{"message": "Added to favorites successfully"}
 	c.ServeJSON()
 }
+
+// GetFavorites retrieves a user's favorite cats using their sub_id passed as a query parameter
+func (c *CatController) GetFavorites() {
+	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+
+	// Retrieve sub_id from the query parameters (passed from the frontend)
+	subID := c.GetString("sub_id")
+	if subID == "" {
+		c.Ctx.Output.SetStatus(http.StatusBadRequest)
+		c.Data["json"] = map[string]string{"error": "Missing 'sub_id' in the request"}
+		c.ServeJSON()
+		return
+	}
+
+	// Construct TheCatAPI URL with query parameters
+	url := fmt.Sprintf("https://api.thecatapi.com/v1/favourites?sub_id=%s&limit=20&order=DESC", subID)
+
+	// Create and send the HTTP GET request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("Failed to create HTTP request:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to create request"}
+		c.ServeJSON()
+		return
+	}
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("HTTP request failed:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to fetch favorites"}
+		c.ServeJSON()
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check the response status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		fmt.Println("TheCatAPI Error Response:", string(bodyBytes))
+		c.Ctx.Output.SetStatus(resp.StatusCode)
+		c.Data["json"] = map[string]string{"error": "Failed to fetch favorites. External API error."}
+		c.ServeJSON()
+		return
+	}
+
+	// Read and return the response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Failed to read response body:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to read API response"}
+		c.ServeJSON()
+		return
+	}
+
+	// Parse the response body into JSON and return it
+	c.Ctx.Output.SetStatus(http.StatusOK)
+	c.Ctx.Output.Header("Content-Type", "application/json")
+	c.Data["json"] = json.RawMessage(bodyBytes)
+	c.ServeJSON()
+}
