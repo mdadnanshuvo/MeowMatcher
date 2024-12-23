@@ -878,6 +878,7 @@ button.upvote:hover, button.downvote:hover {
     height: 100%; /* Fill the container height */
     object-fit: cover; /* Ensure images are not distorted */
     border-radius: 8px; /* Rounded corners */
+    cursor: pointer;
 }
 
 /* Delete Button in List View */
@@ -887,20 +888,21 @@ button.upvote:hover, button.downvote:hover {
     right: 5px; /* Offset from the right of the container */
     width: 30px; /* Larger size for accessibility */
     height: 30px;
-    background: rgba(255, 0, 0, 0.9); /* Red background for visibility */
-    border-radius: 50%; /* Circular button */
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer; /* Pointer cursor on hover */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
     z-index: 10; /* Ensure button appears above the image */
+    width: 45px; /* Larger icon size for better visibility */
+    height: 35px;
+    padding: 5px;
 }
 
 /* Delete Icon */
 #favorites-container.list .delete-icon {
-    width: 16px; /* Larger icon size for better visibility */
-    height: 16px;
+    width: 12px; /* Larger icon size for better visibility */
+    height: 12px;
 }
 
 /* Responsive Adjustments */

@@ -42,6 +42,72 @@ tabs.forEach((tab) => {
 
 
 
+// Adding hover placeholder functionality
+let hoverPlaceholder;
+function initializeHoverPlaceholder() {
+    hoverPlaceholder = document.createElement("div");
+    hoverPlaceholder.id = "hover-placeholder";
+    hoverPlaceholder.style.position = "absolute";
+    hoverPlaceholder.style.background = "rgba(0, 255, 0, 0.9)"; // Green background
+    hoverPlaceholder.style.color = "white";
+    hoverPlaceholder.style.padding = "5px 10px";
+    hoverPlaceholder.style.borderRadius = "5px";
+    hoverPlaceholder.style.fontSize = "14px";
+    hoverPlaceholder.style.whiteSpace = "nowrap";
+    hoverPlaceholder.style.pointerEvents = "none"; // Prevent blocking clicks
+    hoverPlaceholder.style.display = "none"; // Initially hidden
+    hoverPlaceholder.style.zIndex = "1000";
+    hoverPlaceholder.textContent = "Click to view in gallery"; // Placeholder message
+    document.body.appendChild(hoverPlaceholder);
+}
+
+function attachHoverEvents() {
+    const favoritesContainer = document.getElementById("favorites-container");
+    if (!favoritesContainer) return;
+
+    // Show placeholder on mouseover
+    favoritesContainer.addEventListener("mouseover", (e) => {
+        if (e.target.tagName === "IMG") {
+            hoverPlaceholder.style.display = "block";
+        }
+    });
+
+    // Update placeholder position on mousemove
+    favoritesContainer.addEventListener("mousemove", (e) => {
+        if (e.target.tagName === "IMG") {
+            hoverPlaceholder.style.top = `${e.pageY + 15}px`; // Offset below cursor
+            hoverPlaceholder.style.left = `${e.pageX + 15}px`; // Offset to the right of cursor
+        }
+    });
+
+    // Hide placeholder on mouseout
+    favoritesContainer.addEventListener("mouseout", (e) => {
+        if (e.target.tagName === "IMG") {
+            hoverPlaceholder.style.display = "none";
+        }
+    });
+
+   
+}
+
+function deleteFavorite(id) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    favorites = favorites.filter((fav) => fav.id !== id);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+
+    // Reload favorites and check for images
+    loadFavorites();
+    const favoritesContainer = document.getElementById("favorites-container");
+    const images = favoritesContainer.querySelectorAll("img");
+    if (images.length === 0) {
+        hoverPlaceholder.style.display = "none"; // Hide placeholder when no images are left
+    }
+}
+
+
+
+initializeHoverPlaceholder();
+
 // Load the Voting Tab
 async function loadVoting() {
     showLoader();
@@ -346,6 +412,7 @@ async function loadVoting() {
             </div>
         `;
     
+        attachHoverEvents();
         attachDeleteHandlers();
         attachClickHandlers();
         attachViewToggleHandlers();
