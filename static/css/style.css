@@ -327,37 +327,10 @@ button.upvote:hover, button.downvote:hover {
 }
 
 
-/* List View Layout */
-#favorites-container.list {
-    display: block;
-}
 
 
-/* List View Item */
-#favorites-container.list .grid-view-item {
-    display: flex;
-    align-items: center;
-    position: relative;
-    padding: 10px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 
 
-#favorites-container.list img {
-    width: 500px;
-    height: 300px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add smooth transformation */
-    cursor: pointer; /* Change cursor to pointer */
-}
-
-#favorites-container.list img:hover {
-    transform: scale(1.1); /* Slightly enlarge the image on hover */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Enhance shadow effect */
-}
 
 /* Icons for View Toggle Buttons */
 .view-icon {
@@ -871,4 +844,74 @@ button.upvote:hover, button.downvote:hover {
     width: 12px; /* Smaller icon size */
     height: 12px; /* Keep proportions consistent */
     display: block; /* Ensure proper layout */
+}
+
+
+
+
+/* List View Container */
+#favorites-container.list {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    gap: 15px; /* Space between list items */
+    padding: 10px; /* Padding around the container */
+    max-width: 100%; /* Ensure the container doesn't exceed its parent */
+    align-items: center; /* Center items in the container */
+}
+
+/* List View Item */
+#favorites-container.list .grid-view-item {
+    position: relative; /* Enable absolute positioning for delete button */
+    display: flex; /* Align image horizontally */
+    justify-content: center; /* Center the image horizontally */
+    align-items: center; /* Center the image vertically */
+    width: 250px; /* Fixed width for consistent alignment */
+    height: 250px; /* Fixed height to match width */
+    background: #fff; /* White background for clarity */
+    border-radius: 8px; /* Rounded corners for a modern look */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* List View Image */
+#favorites-container.list .grid-view-item img {
+    width: 100%; /* Fill the container width */
+    height: 100%; /* Fill the container height */
+    object-fit: cover; /* Ensure images are not distorted */
+    border-radius: 8px; /* Rounded corners */
+}
+
+/* Delete Button in List View */
+#favorites-container.list .delete-icon-container {
+    position: absolute; /* Position relative to the grid-view-item */
+    top: 5px; /* Offset from the top of the container */
+    right: 5px; /* Offset from the right of the container */
+    width: 30px; /* Larger size for accessibility */
+    height: 30px;
+    background: rgba(255, 0, 0, 0.9); /* Red background for visibility */
+    border-radius: 50%; /* Circular button */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* Pointer cursor on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    z-index: 10; /* Ensure button appears above the image */
+}
+
+/* Delete Icon */
+#favorites-container.list .delete-icon {
+    width: 16px; /* Larger icon size for better visibility */
+    height: 16px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #favorites-container.list .grid-view-item {
+        width: 200px; /* Smaller width for smaller screens */
+        height: 200px; /* Match height to width */
+    }
+
+    #favorites-container.list .delete-icon-container {
+        width: 25px; /* Adjust button size */
+        height: 25px;
+    }
 }
