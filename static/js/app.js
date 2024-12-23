@@ -162,15 +162,21 @@ async function loadVoting() {
         content.innerHTML = `
             <div class="card" id="cat-${cat.id}">
                 <img src="${cat.url}" alt="Random Cat">
-                <div class="actions">
-                    <div class="left-icons">
-                        <button class="heart" data-id="${cat.id}" data-cat='${JSON.stringify(cat)}'>❤️</button>
-                    </div>
-                    <div class="right-icons">
-                        <button class="upvote" data-id="${cat.id}">👍</button>
-                        <button class="downvote" data-id="${cat.id}">👎</button>
-                    </div>
+               <div class="actions">
+                <div class="left-icons">
+                    <button class="heart" data-id="${cat.id}" data-cat='${JSON.stringify(cat)}'>
+                        <img src="/static/icons/heart.png" alt="Heart Icon">
+                    </button>
                 </div>
+                <div class="right-icons">
+                    <button class="upvote" data-id="${cat.id}">
+                        <img src="/static/icons/like.png" alt="Like Icon">
+                    </button>
+                    <button class="downvote" data-id="${cat.id}">
+                        <img src="/static/icons/dislike.png" alt="Dislike Icon">
+                    </button>
+                </div>
+            </div>
             </div>
         `;
 
