@@ -7,47 +7,98 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
+    background-image: url('https://cdn.pixabay.com/photo/2022/12/05/05/20/cat-7635983_960_720.png'); /* Add the actual image path */
+    background-size: contain; /* Ensure the entire image fits without cropping */
+    background-repeat: no-repeat; /* Avoid repeating the image */
+    background-position: center top; /* Center the image at the top of the page */
+    background-attachment: fixed; /* Make the background static while scrolling */
     color: #333;
+    margin: 0;
+    padding: 0;
 }
 
 /* Main Container */
 main {
     max-width: 550px;
-    max-height: auto;
     margin: 40px auto;
-    background: white;
+    background: rgba(255, 255, 255, 0.9); /* White background with higher transparency */
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    position: relative; /* Ensure pseudo-elements can be applied */
+    padding: 20px;
+    z-index: 10; /* Make sure the content is on top of the background */
 }
 
+/* Optional: Add some spacing between the content and the edges of the viewport */
+body::before {
+    content: '';
+    display: block;
+    height: 100px;
+}
+
+
 /* Navigation Tabs */
+
+/* Enhanced Navigation Tabs */
 .nav {
     display: flex;
     justify-content: flex-start; /* Align tabs to the left */
     align-items: center;
-    background-color: #fdfdfd;
-    border-bottom: 1px solid #ddd;
-    padding: 10px 0;
+    background-color: #f9f9f9; /* Softer background color */
+    border-bottom: 2px solid #ddd; /* Subtle border */
+    padding: 10px 20px; /* Add more padding for a polished look */
+    font-size: 16px;
 }
 
 .nav a {
+    display: flex;
+    align-items: center; /* Align icon and text vertically */
+    gap: 8px; /* Space between icon and text */
     text-decoration: none;
-    color: #888;
+    color: #555;
     font-weight: bold;
-    font-size: 16px;
-    transition: color 0.3s ease;
-    margin: 20px; /* Add spacing between tabs */
+    font-size: 18px; /* Increase font size for readability */
+    margin-right: 20px; /* Space between tabs */
+    padding: 8px 12px; /* Add padding for better clickability */
+    transition: color 0.3s ease, background-color 0.3s ease;
+    border-radius: 6px; /* Rounded edges */
 }
 
 .nav a.active {
-    color: red;
+    color: #fff;
+    background-color: #4caf50; /* Highlight active tab with green */
 }
 
 .nav a:hover {
-    color: #555;
+    background-color: #f0f0f0; /* Subtle hover effect */
+    color: #333;
 }
+
+/* Example Icons Using Font Awesome */
+.nav a::before {
+    font-family: "Font Awesome 5 Free"; /* Ensure Font Awesome is included */
+    font-weight: 900;
+    margin-right: 5px;
+}
+
+.nav a.home::before {
+    content: "\f015"; /* Home icon */
+}
+
+.nav a.settings::before {
+    content: "\f013"; /* Settings icon */
+}
+
+.nav a.profile::before {
+    content: "\f007"; /* Profile icon */
+}
+
+.nav a.help::before {
+    content: "\f059"; /* Help icon */
+}
+
+
 
 /* Card Content */
 .card img {
@@ -142,34 +193,47 @@ button.upvote:hover, button.downvote:hover {
 /* View Toggle Buttons */
 .view-toggle {
     display: flex;
-    justify-content: flex-start; /* Align buttons to the left */
-    padding: 5px;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #ddd;
-    gap: 10px; /* Add spacing between buttons */
+    justify-content: center;
+    gap: 10px;
 }
 
+
+
 .view-toggle .toggle-btn {
+    display: flex;
+    align-items: center;
     padding: 10px 15px;
-    margin: 0; /* Remove unnecessary margin */
     border: 1px solid #ddd;
-    background-color: #fff;
-    cursor: pointer;
-    font-size: 14px;
+    background: #f9f9f9;
     border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
+
 .view-toggle .toggle-btn.active {
-    background-color: #f0f0f0;
-    font-weight: bold;
+    background: #4caf50;
+    color: #fff;
+    border-color: #4caf50;
     transform: scale(1.05);
 }
 
 .view-toggle .toggle-btn:hover {
-    background-color: #f7f7f7;
-    transform: scale(1.1);
+    background: #4caf50;
+    color: #fff;
 }
+
+
+.view-toggle .toggle-btn img {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
+
+
+
+
 
 /* Grid View Styles */
 .grid-view {
@@ -179,9 +243,9 @@ button.upvote:hover, button.downvote:hover {
     padding: 10px;
 }
 
+/* Grid View Item */
 .grid-view-item {
-    text-align: center;
-    transition: transform 0.3s ease;
+    position: relative;
 }
 
 .grid-view-item img {
@@ -203,26 +267,28 @@ button.upvote:hover, button.downvote:hover {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-    padding: 10px;
-    border-radius: 8px;
 }
+
 
 .list-view-item:hover {
     background-color: #f9f9f9;
 }
 
 .list-view-item img {
-    margin-right: 15px;
-    max-width: 150px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    width: 100px;
+    height: 100px;
+    margin-right: 10px;
+    object-fit: cover;
+    border-radius: 5px;
 }
 
 .list-view-item .cat-info {
     font-size: 14px;
     color: #555;
 }
+
+
+
 
 /* Favorites Tab Empty State */
 .favorites-empty {
@@ -238,13 +304,13 @@ button.upvote:hover, button.downvote:hover {
     max-height: 400px;
 }
 
-/* Favorites Grid */
+/* Grid View Layout */
 #favorites-container.grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
-    padding: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
 }
+
 
 #favorites-container.grid img {
     width: 100%;
@@ -261,22 +327,21 @@ button.upvote:hover, button.downvote:hover {
 }
 
 
-/* Favorites List */
+/* List View Layout */
 #favorites-container.list {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center align items horizontally */
-    padding: 10px;
+    display: block;
 }
 
-#favorites-container.list .list-view-item {
+
+/* List View Item */
+#favorites-container.list .grid-view-item {
     display: flex;
     align-items: center;
-    justify-content: center; /* Center align content within each row */
-    margin-bottom: 15px;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-    width: 100%; /* Ensure row takes up full width */
+    position: relative;
+    padding: 10px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -301,6 +366,15 @@ button.upvote:hover, button.downvote:hover {
     display: inline-block;
 }
 
+
+
+/* List View Image */
+#favorites-container.list .grid-view-item img.clickable {
+    width: 150px;
+    height: auto;
+    margin-right: 15px;
+    border-radius: 8px;
+}
 
 
 /* Modal Styles */
@@ -369,16 +443,13 @@ button.upvote:hover, button.downvote:hover {
 
 /* Search Bar */
 .breeds-search {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 20px 0;
-    padding: 10px;
-    background-color: #f7f7f7;
+    position: relative;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.9); /* Semi-transparent background for readability */
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
-
 .search-input {
     flex-grow: 1;
     padding: 8px 12px;
@@ -495,10 +566,12 @@ button.upvote:hover, button.downvote:hover {
     padding: 25px;
     border-radius: 15px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(135deg, #ffffff, #f7f9fc);
-    transition: box-shadow 0.4s ease, transform 0.4s ease;
+    background: rgba(255, 255, 255, 0.9); /* Slightly transparent white background */
     max-width: 800px;
+    transition: box-shadow 0.4s ease, transform 0.4s ease;
 }
+
+
 
 .carousel-item:hover {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
@@ -730,4 +803,72 @@ button.upvote:hover, button.downvote:hover {
     .carousel-img {
         object-fit: contain;
     }
+}
+
+
+
+/* Styling Tab Icons */
+.tab-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px; /* Add space between icon and text */
+    vertical-align: middle; /* Align icon with text */
+}
+
+/* Styling Inline Icons */
+.inline-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+    vertical-align: middle; /* Align inline icon with text */
+}
+
+/* Styling View Toggle Icons */
+.view-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 5px; /* Add spacing for grid and list view icons */
+    vertical-align: middle;
+}
+
+
+
+
+/* Favorite Image */
+.object-cover {
+    width: 100%; /* Full width of container */
+    height: 100%; /* Full height of container */
+    object-fit: cover; /* Ensures the image is properly scaled */
+    border-radius: 8px; /* Slight rounding of image corners */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow for images */
+}
+
+
+
+.grid-view-item {
+    position: relative; /* Establish a positioning context for child elements */
+}
+
+.delete-icon-container {
+    position: absolute; /* Position relative to the .grid-view-item */
+    top: 3px; /* Slightly closer to the top edge */
+    right: 3px; /* Slightly closer to the right edge */
+    /* Slightly more opaque background */
+    padding: 3px; /* Reduce padding for a smaller button */
+    border-radius: 30%; /* Make the background circular */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    z-index: 10; /* Ensure it appears above the image */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+    width: 45px; /* Adjust overall size of the button */
+    height: 35px; /* Adjust overall size of the button */
+    margin-top: 5px;
+}
+
+.delete-icon {
+    width: 12px; /* Smaller icon size */
+    height: 12px; /* Keep proportions consistent */
+    display: block; /* Ensure proper layout */
 }

@@ -5,32 +5,63 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize the app with the default tab
     loadVoting();
 
-    tabs.forEach((tab) => {
-        tab.addEventListener("click", (e) => {
-            e.preventDefault();
-            tabs.forEach((t) => t.classList.remove("active"));
-            tab.classList.add("active");
+   
+// Adding Icons to Tabs Dynamically
+tabs.forEach((tab) => {
+    const tabType = tab.dataset.tab;
 
-            const selectedTab = tab.dataset.tab;
-            if (selectedTab === "voting") loadVoting();
-            else if (selectedTab === "favorites") loadFavorites();
-            else if (selectedTab === "breeds") loadBreeds();
-        });
+    // Add icons based on the tab type
+    const iconMap = {
+        voting: "/static/icons/voting.png",
+        breeds: "/static/icons/breeds.png",
+        favorites: "/static/icons/fav.png",
+    };
+
+    const iconSrc = iconMap[tabType];
+    if (iconSrc) {
+        const iconElement = document.createElement("img");
+        iconElement.src = iconSrc;
+        iconElement.alt = `${tabType} Icon`;
+        iconElement.classList.add("tab-icon");
+
+        // Prepend the icon to the tab
+        tab.prepend(iconElement);
+    }
+
+    tab.addEventListener("click", (e) => {
+        e.preventDefault();
+        tabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const selectedTab = tabType;
+        if (selectedTab === "voting") loadVoting();
+        else if (selectedTab === "favorites") loadFavorites();
+        else if (selectedTab === "breeds") loadBreeds();
     });
+});
+
 
 
 // Load the Voting Tab
 async function loadVoting() {
-    showLoader(); // Show loading spinner while fetching the cat
+    showLoader();
     try {
-        const cat = await fetchRandomCat(); // Fetch a random cat
+        const cat = await fetchRandomCat();
         if (cat) {
-            renderCat(cat); // Render the fetched cat
+            renderCat(cat);
         } else {
-            content.innerHTML = "<p>Could not load cat. Try again!</p>";
+            content.innerHTML = `
+                <p>
+                    <img src="/static/icons/voting.png" alt="Voting Icon" class="inline-icon">
+                    Could not load cat. Try again!
+                </p>`;
         }
     } catch (error) {
-        content.innerHTML = "<p>Failed to load the voting tab. Please try again!</p>";
+        content.innerHTML = `
+            <p>
+                <img src="/static/icons/voting.png" alt="Voting Icon" class="inline-icon">
+                Failed to load the voting tab. Please try again!
+            </p>`;
     }
 }
 
@@ -105,26 +136,33 @@ async function loadVoting() {
     }
 
 
+    // Load the Breeds Tab
     async function loadBreeds() {
         const content = document.getElementById("cat-content");
         content.innerHTML = `
             <div style="text-align: center; padding: 20px;">
                 <div class="spinner"></div>
-                <p>Loading breeds...</p>
+                <p>
+                    <img src="/static/icons/breeds.png" alt="Breeds Icon" class="inline-icon">
+                    Loading breeds...
+                </p>
             </div>`;
-        
         try {
             const response = await fetch("/breeds-with-images");
             if (!response.ok) throw new Error("Failed to fetch breeds data");
-            
+    
             const breeds = await response.json();
             renderBreeds(breeds);
         } catch (error) {
-            content.innerHTML = `<p>Failed to load breeds. Please try again!</p>`;
+            content.innerHTML = `
+                <p>
+                    <img src="/static/icons/breeds.png" alt="Breeds Icon" class="inline-icon">
+                    Failed to load breeds. Please try again!
+                </p>`;
             console.error("Error loading breeds:", error);
         }
     }
-    
+
 
 
     function renderBreeds(breeds) {
@@ -264,15 +302,14 @@ async function loadVoting() {
     }
     
 
-  
-    // Load Favorites Tab
+
     function loadFavorites() {
         const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
         if (favorites.length === 0) {
             content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
             return;
         }
-
+    
         content.innerHTML = `
             <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
                 <div class="view-toggle flex py-4 bg-white gap-2">
@@ -289,7 +326,9 @@ async function loadVoting() {
                             (fav, index) => `
                         <div class="grid-view-item" data-index="${index}">
                             <img src="${fav.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
-                            <img src="/site/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                            <div class="delete-icon-container">
+                                <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                            </div>
                         </div>`
                         )
                         .join("")}
@@ -306,83 +345,98 @@ async function loadVoting() {
                 </div>
             </div>
         `;
-
+    
         attachDeleteHandlers();
         attachClickHandlers();
         attachViewToggleHandlers();
     }
+    
 
-    // Attach Delete Handlers
-    function attachDeleteHandlers() {
-        document.querySelectorAll(".delete-icon").forEach((icon) => {
-            icon.addEventListener("click", (e) => {
-                const idToDelete = e.target.dataset.id;
-                deleteFavorite(idToDelete);
-            });
+// Attach Delete Handlers
+function attachDeleteHandlers() {
+    document.querySelectorAll(".delete-icon").forEach((icon) => {
+        icon.addEventListener("click", (e) => {
+            const idToDelete = e.target.dataset.id;
+            deleteFavorite(idToDelete);
         });
-    }
+    });
+}
 
-    // Delete Favorite Functionality
-    function deleteFavorite(id) {
-        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-        favorites = favorites.filter((fav) => fav.id !== id);
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-        loadFavorites();
-    }
+// Delete Favorite Functionality
+function deleteFavorite(id) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    favorites = favorites.filter((fav) => fav.id !== id);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    loadFavorites();
+}
 
-    // Attach Click Handlers for Modal Opening
-    function attachClickHandlers() {
-        const clickableImages = document.querySelectorAll(".clickable");
-        const modal = document.getElementById("image-modal");
-        const modalImage = document.getElementById("modal-image");
-        const closeModal = modal.querySelector(".close");
-        const prevImage = document.getElementById("prev-image");
-        const nextImage = document.getElementById("next-image");
 
-        let currentImageIndex = 0;
-        const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+// Attach Click Handlers for Modal Opening
+function attachClickHandlers() {
+    const clickableImages = document.querySelectorAll(".clickable");
+    const modal = document.getElementById("image-modal");
+    const modalImage = document.getElementById("modal-image");
+    const closeModal = modal.querySelector(".close");
+    const prevImage = document.getElementById("prev-image");
+    const nextImage = document.getElementById("next-image");
 
-        clickableImages.forEach((img) => {
-            img.addEventListener("click", (e) => {
-                currentImageIndex = parseInt(e.target.closest("[data-index]").dataset.index, 10);
-                modalImage.src = favorites[currentImageIndex].url;
-                modal.classList.remove("hidden");
-            });
+    let currentImageIndex = 0;
+    const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+    clickableImages.forEach((img) => {
+        img.addEventListener("click", (e) => {
+            currentImageIndex = parseInt(e.target.closest("[data-index]").dataset.index, 10);
+            modalImage.src = favorites[currentImageIndex].url;
+            modal.classList.remove("hidden");
         });
+    });
 
-        closeModal.addEventListener("click", () => modal.classList.add("hidden"));
-        prevImage.addEventListener("click", () => navigateImages(-1, favorites, modalImage));
-        nextImage.addEventListener("click", () => navigateImages(1, favorites, modalImage));
+    closeModal.addEventListener("click", () => modal.classList.add("hidden"));
+    prevImage.addEventListener("click", () => navigateImages(-1, favorites, modalImage));
+    nextImage.addEventListener("click", () => navigateImages(1, favorites, modalImage));
+}
+
+// Navigate Modal Images
+function navigateImages(direction, favorites, modalImage) {
+    const length = favorites.length;
+    let currentImageIndex = favorites.findIndex((cat) => cat.url === modalImage.src);
+    currentImageIndex = (currentImageIndex + direction + length) % length;
+    modalImage.src = favorites[currentImageIndex].url;
+}
+
+function attachViewToggleHandlers() {
+    const gridViewBtn = document.getElementById("grid-view");
+    const listViewBtn = document.getElementById("list-view");
+    const favoritesContainer = document.getElementById("favorites-container");
+
+    // Ensure all elements are available
+    if (!gridViewBtn || !listViewBtn || !favoritesContainer) {
+        console.error("View toggle elements not found in the DOM.");
+        return;
     }
 
-    // Navigate Modal Images
-    function navigateImages(direction, favorites, modalImage) {
-        const length = favorites.length;
-        let currentImageIndex = favorites.findIndex((cat) => cat.url === modalImage.src);
-        currentImageIndex = (currentImageIndex + direction + length) % length;
-        modalImage.src = favorites[currentImageIndex].url;
+    // Utility function to toggle views
+    function toggleView(activeBtn, inactiveBtn, containerClassToAdd, containerClassToRemove) {
+        activeBtn.classList.add("active");
+        inactiveBtn.classList.remove("active");
+        favoritesContainer.classList.add(containerClassToAdd);
+        favoritesContainer.classList.remove(containerClassToRemove);
     }
 
-    // Attach View Toggle Handlers
-    function attachViewToggleHandlers() {
-        const gridViewBtn = document.getElementById("grid-view");
-        const listViewBtn = document.getElementById("list-view");
-        const favoritesContainer = document.getElementById("favorites-container");
+    // Event listener for grid view
+    gridViewBtn.addEventListener("click", () => {
+        toggleView(gridViewBtn, listViewBtn, "grid", "list");
+    });
 
-        gridViewBtn.addEventListener("click", () => {
-            listViewBtn.classList.remove("active");
-            gridViewBtn.classList.add("active");
-            favoritesContainer.classList.remove("list");
-            favoritesContainer.classList.add("grid");
-        });
+    // Event listener for list view
+    listViewBtn.addEventListener("click", () => {
+        toggleView(listViewBtn, gridViewBtn, "list", "grid");
+    });
+}
 
-        listViewBtn.addEventListener("click", () => {
-            gridViewBtn.classList.remove("active");
-            listViewBtn.classList.add("active");
-            favoritesContainer.classList.remove("grid");
-            favoritesContainer.classList.add("list");
-        });
-    }
+
+
+
 
     // Show Toast Notification
     function showToast(message) {
