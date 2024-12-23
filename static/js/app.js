@@ -199,18 +199,52 @@ async function loadVoting() {
             showToast("You downvoted this cat!");
         });
     }
+
     
-    // Save Cat to Favorites
-    function saveFavorite(cat) {
-        const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-        if (!favorites.some((fav) => fav.id === cat.id)) {
-            favorites.push(cat);
-            localStorage.setItem("favorites", JSON.stringify(favorites));
-            showToast("Added to favorites!");
-        } else {
-            showToast("Already in favorites!");
+    // Generate a unique sub_id and store it in localStorage
+function getOrCreateSubID() {
+    let subID = localStorage.getItem("sub_id");
+    if (!subID) {
+        subID = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem("sub_id", subID);
+    }
+    return subID;
+}
+
+
+
+    async function saveFavorite(cat) {
+        const subID = await getOrCreateSubID(); // Use localStorage or fetch from backend
+    
+        const payload = {
+            image_id: cat.id,
+            sub_id: subID
+        };
+    
+        try {
+            const response = await fetch("http://localhost:8080/favorites", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Favorite added:", data);
+                showToast("Added to favorites!");
+            } else {
+                const error = await response.json();
+                console.error("Error adding favorite:", error);
+                showToast(error.error || "Failed to add to favorites.");
+            }
+        } catch (err) {
+            console.error("Network or server error:", err);
+            showToast("Unable to save favorite. Please try again.");
         }
     }
+    
 
 
     // Load the Breeds Tab
