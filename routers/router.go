@@ -27,4 +27,10 @@ func init() {
 
 	// Breeds with Images
 	beego.Router("/breeds-with-images", &controllers.CatController{}, "get:BreedsWithImages")
+
+	// Define the route for posting a vote (upvote or downvote)
+	beego.Router("/vote", &controllers.CatController{}, "post:PostVote")
+
+	// Define the route for retrieving votes by sub_id
+	beego.Router("/votes", &controllers.CatController{}, "get:GetVotes")
 }

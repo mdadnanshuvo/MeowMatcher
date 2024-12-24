@@ -145,9 +145,10 @@ async function loadVoting() {
     }
     
 
+   
     // Render Cat Content
-    function renderCat(cat) {
-        content.innerHTML = `
+function renderCat(cat) {
+    content.innerHTML = `
     <div class="card" id="cat-${cat.id}">
         <div class="image-container">
             <img src="${cat.url}" alt="Random Cat" class="cat-image">
@@ -169,23 +170,63 @@ async function loadVoting() {
         </div>
     </div>
 `;
-        // Event listeners for heart, upvote, and downvote buttons
-        document.querySelector(".heart").addEventListener("click", () => {
-            saveFavorite(cat);
-            localStorage.removeItem("votingData"); // Clear cache after action
-            loadVoting();
-        });
-    
-        document.querySelector(".upvote").addEventListener("click", () => {
-            showToast("You upvoted this cat!");
-        });
-    
-        document.querySelector(".downvote").addEventListener("click", () => {
-            showToast("You downvoted this cat!");
-        });
-    }
 
-    
+    // Event listeners for heart, upvote, and downvote buttons
+    document.querySelector(".heart").addEventListener("click", () => {
+        saveFavorite(cat);
+        localStorage.removeItem("votingData"); // Clear cache after action
+        loadVoting();
+    });
+
+    // Event listener for upvote button
+    document.querySelector(".upvote").addEventListener("click", () => {
+        postVote(cat.id, 1); // 1 for upvote
+        loadVoting();
+    });
+
+    // Event listener for downvote button
+    document.querySelector(".downvote").addEventListener("click", () => {
+        postVote(cat.id, -1); // -1 for downvote
+        loadVoting();
+    });
+}
+
+// Post Vote (upvote or downvote)
+async function postVote(imageId, value) {
+    const subId = "user_static_sub_id_12345"; // You can change this to dynamically fetch the user ID
+    const apiUrl = "/vote"; // Your backend API endpoint
+
+    const payload = {
+        image_id: imageId,
+        sub_id: subId,
+        value: value, // 1 for upvote, -1 for downvote
+    };
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            if (value === 1) {
+                showToast("You upvoted this cat! ❤️");
+            } else {
+                showToast("You downvoted this cat. 😞");
+            }
+        } else {
+            showToast(`Error: ${data.error || "Unable to vote"}`);
+        }
+    } catch (error) {
+        console.error("Error during voting:", error);
+        showToast("An error occurred while voting. Please try again.");
+    }
+}
+
 
     //Functions for Breeds
 

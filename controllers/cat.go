@@ -398,3 +398,172 @@ func (c *CatController) DeleteFavorite() {
 	c.Data["json"] = map[string]string{"message": "Favorite deleted successfully"}
 	c.ServeJSON()
 }
+
+// PostVote handles both upvotes and downvotes based on the value parameter.
+func (c *CatController) PostVote() {
+	// Retrieve values from the app.conf file
+	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+	subID := web.AppConfig.DefaultString("cat_api_sub_id", "") // Retrieve sub_id from config
+	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "https://api.thecatapi.com/v1")
+
+	if subID == "" {
+		fmt.Println("sub_id is not configured in app.conf")
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "sub_id is not configured on the server"}
+		c.ServeJSON()
+		return
+	}
+
+	// Parse incoming JSON payload
+	body, err := io.ReadAll(c.Ctx.Request.Body)
+	if err != nil {
+		fmt.Println("Failed to read request body:", err)
+		c.Ctx.Output.SetStatus(http.StatusBadRequest)
+		c.Data["json"] = map[string]string{"error": "Unable to read request body"}
+		c.ServeJSON()
+		return
+	}
+
+	var voteRequest struct {
+		ImageID string `json:"image_id"`
+		SubID   string `json:"sub_id"`
+		Value   int    `json:"value"` // 1 for upvote, -1 for downvote
+	}
+
+	if err := json.Unmarshal(body, &voteRequest); err != nil {
+		fmt.Println("Failed to parse JSON payload:", err)
+		c.Ctx.Output.SetStatus(http.StatusBadRequest)
+		c.Data["json"] = map[string]string{"error": "Invalid JSON format. Ensure 'image_id' and 'value' are included."}
+		c.ServeJSON()
+		return
+	}
+
+	// Use default sub_id if not provided in the request
+	if voteRequest.SubID == "" {
+		voteRequest.SubID = subID
+	}
+
+	// Validate the values
+	if voteRequest.ImageID == "" || (voteRequest.Value != 1 && voteRequest.Value != -1) {
+		fmt.Println("Invalid image_id or vote value")
+		c.Ctx.Output.SetStatus(http.StatusBadRequest)
+		c.Data["json"] = map[string]string{"error": "Invalid image_id or vote value"}
+		c.ServeJSON()
+		return
+	}
+
+	// Construct the API URL for posting the vote
+	url := fmt.Sprintf("%s/votes", baseURL)
+
+	// Create the payload
+	payload := map[string]interface{}{
+		"image_id": voteRequest.ImageID,
+		"sub_id":   voteRequest.SubID,
+		"value":    voteRequest.Value,
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Failed to marshal payload:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to encode vote data"}
+		c.ServeJSON()
+		return
+	}
+
+	// Send the POST request to TheCatAPI
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		fmt.Println("Failed to create POST request:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to create request"}
+		c.ServeJSON()
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("HTTP request failed:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to submit vote"}
+		c.ServeJSON()
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check the response status
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		fmt.Println("TheCatAPI Error Response:", string(bodyBytes))
+		c.Ctx.Output.SetStatus(resp.StatusCode)
+		c.Data["json"] = map[string]string{"error": "Failed to submit vote. External API error."}
+		c.ServeJSON()
+		return
+	}
+
+	// Successfully voted, respond with success message
+	c.Data["json"] = map[string]string{"message": "Vote recorded successfully"}
+	c.ServeJSON()
+}
+
+// GetVotes retrieves the votes for a specific user (sub_id) or all votes.
+func (v *CatController) GetVotes() {
+	subID := v.GetString("sub_id")
+	limit := 10
+	order := v.GetString("order")
+
+	// Retrieve values from the app.conf file
+	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+	apiBaseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
+
+	// Prepare the API URL with query parameters
+	apiURL := fmt.Sprintf("%s/votes?sub_id=%s&limit=%d&order=%s", apiBaseURL, subID, limit, order)
+
+	// Make the GET request to TheCatAPI
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		v.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		v.Data["json"] = map[string]string{"error": "Failed to create GET request to TheCatAPI"}
+		v.ServeJSON()
+		return
+	}
+
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		v.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		v.Data["json"] = map[string]string{"error": "Error fetching votes from TheCatAPI"}
+		v.ServeJSON()
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check if the response was successful
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		v.Ctx.Output.SetStatus(resp.StatusCode)
+		v.Data["json"] = map[string]string{"error": fmt.Sprintf("Error fetching votes: %s", string(bodyBytes))}
+		v.ServeJSON()
+		return
+	}
+
+	// Decode the response body
+	var votes []map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&votes)
+	if err != nil {
+		v.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		v.Data["json"] = map[string]string{"error": "Error decoding the votes response"}
+		v.ServeJSON()
+		return
+	}
+
+	// Return the votes data
+	v.Ctx.Output.SetStatus(http.StatusOK)
+	v.Data["json"] = votes
+	v.ServeJSON()
+}
