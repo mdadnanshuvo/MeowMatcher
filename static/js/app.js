@@ -209,39 +209,122 @@ function getOrCreateSubID() {
 }
 
 
+function saveFavorite(cat) {
+    const url = '/add-favourites'; // Backend route for adding favorites
 
-    async function saveFavorite(cat) {
-        const subID = await getOrCreateSubID(); // Use localStorage or fetch from backend
-    
-        const payload = {
-            image_id: cat.id,
-            sub_id: subID
-        };
-    
-        try {
-            const response = await fetch("http://localhost:8080/favorites", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-    
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Favorite added:", data);
-                showToast("Added to favorites!");
-            } else {
-                const error = await response.json();
-                console.error("Error adding favorite:", error);
-                showToast(error.error || "Failed to add to favorites.");
-            }
-        } catch (err) {
-            console.error("Network or server error:", err);
-            showToast("Unable to save favorite. Please try again.");
+    // Prepare the data to send in the POST request
+    const data = {
+        image_id: cat.id // Send the image ID for the favorite
+    };
+
+    // Send the POST request to the backend
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data) // Send the payload as JSON
+    })
+    .then(response => {
+        if (response.status === 409) {
+            // Handle duplicate favorite (HTTP 409 Conflict)
+            showToast("This image is already a favorite! ❤️");
+            return response.json(); // Still parse the response for any additional data
         }
+        return response.json();
+    })
+    .then(responseData => {
+        // Handle the response from the server
+        if (responseData.message) {
+            showToast(responseData.message); // Show success message
+        } else if (responseData.error) {
+            showToast("Error: " + responseData.error); // Show error message
+        }
+    })
+    .catch(error => {
+        // Handle any network or other errors
+        console.error("Error saving favorite:", error);
+        showToast("An error occurred while saving the favorite. Please try again.");
+    });
+}
+
+
+
+
+async function loadFavorites() {
+    const apiUrl = '/get-favourites'; // Backend route for fetching favorites
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (response.ok) {
+            const favorites = await response.json();
+            console.log("Fetched Favorites:", favorites); // Log for debugging
+
+            if (favorites.length === 0) {
+                content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
+                return;
+            }
+
+            // Render favorites dynamically
+            content.innerHTML = `
+                <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
+                    <div class="view-toggle flex py-4 bg-white gap-2">
+                        <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
+                            <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">Grid View
+                        </button>
+                        <button class="toggle-btn" id="list-view" role="button" tabindex="0">
+                            <img src="/static/icons/list-view.png" alt="List View" class="view-icon">List View
+                        </button>
+                    </div>
+                    <div id="favorites-container" class="grid">
+                        ${favorites
+                            .map(
+                                (fav, index) => `
+                        <div class="grid-view-item" data-index="${index}">
+                            <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
+                            <div class="delete-icon-container">
+                                <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                            </div>
+                        </div>`
+                            )
+                            .join("")}
+                    </div>
+                    <div id="image-modal" class="modal hidden">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
+                            <div class="modal-nav">
+                                <button id="prev-image" class="nav-btn">Prev</button>
+                                <button id="next-image" class="nav-btn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Attach event handlers for hover, delete, and click actions
+            attachHoverEvents();
+            attachDeleteHandlers();
+            attachClickHandlers();
+            attachViewToggleHandlers();
+        } else {
+            const error = await response.json();
+            console.error("Failed to fetch favorites:", error);
+            content.innerHTML = "<p>Error fetching favorites. Please try again later.</p>";
+        }
+    } catch (err) {
+        console.error("Network or server error:", err);
+        content.innerHTML = "<p>Unable to fetch favorites. Please try again later.</p>";
     }
-    
+}
+
+
 
 
     // Load the Breeds Tab
@@ -409,82 +492,7 @@ function getOrCreateSubID() {
         }
     }
     
-    async function loadFavorites() {
-        const subID = localStorage.getItem("sub_id"); // Retrieve sub_id from localStorage
-        if (!subID) {
-            content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
-            return;
-        }
-    
-        const apiUrl = `http://localhost:8080/favorites?sub_id=${subID}`;
-    
-        try {
-            const response = await fetch(apiUrl, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
-    
-            if (response.ok) {
-                const favorites = await response.json();
-                if (favorites.length === 0) {
-                    content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
-                    return;
-                }
-    
-                // Render Favorites
-                content.innerHTML = `
-                    <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
-                        <div class="view-toggle flex py-4 bg-white gap-2">
-                            <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
-                                <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">Grid View
-                            </button>
-                            <button class="toggle-btn" id="list-view" role="button" tabindex="0">
-                                <img src="/static/icons/list-view.png" alt="List View" class="view-icon">List View
-                            </button>
-                        </div>
-                        <div id="favorites-container" class="grid">
-                            ${favorites
-                                .map(
-                                    (fav, index) => `
-                            <div class="grid-view-item" data-index="${index}">
-                                <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
-                                <div class="delete-icon-container">
-                                    <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
-                                </div>
-                            </div>`
-                                )
-                                .join("")}
-                        </div>
-                        <div id="image-modal" class="modal hidden">
-                            <div class="modal-content">
-                                <span class="close">&times;</span>
-                                <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
-                                <div class="modal-nav">
-                                    <button id="prev-image" class="nav-btn">Prev</button>
-                                    <button id="next-image" class="nav-btn">Next</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-    
-                attachHoverEvents();
-                attachDeleteHandlers();
-                attachClickHandlers();
-                attachViewToggleHandlers();
-            } else {
-                const error = await response.json();
-                console.error("Failed to fetch favorites:", error);
-                content.innerHTML = `<p>Error fetching favorites: ${error.error || "Unknown error"}</p>`;
-            }
-        } catch (err) {
-            console.error("Network or server error:", err);
-            content.innerHTML = "<p>Unable to fetch favorites. Please try again later.</p>";
-        }
-    }
-
+   
    
 
 // Attach Delete Handlers

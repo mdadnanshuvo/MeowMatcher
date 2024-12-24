@@ -153,10 +153,19 @@ func isValidCache(data interface{}) bool {
 
 func (c *CatController) AddToFavorites() {
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
-	subID := c.GetString("sub_id") // Optional sub_id parameter
+	subID := web.AppConfig.DefaultString("cat_api_sub_id", "") // Retrieve sub_id from config file
+	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "https://api.thecatapi.com/v1")
+
+	if subID == "" {
+		fmt.Println("sub_id is not configured in app.conf")
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "sub_id is not configured on the server"}
+		c.ServeJSON()
+		return
+	}
 
 	// Parse incoming JSON payload
-	body, err := io.ReadAll(c.Ctx.Request.Body) // Ensure raw body is read for validation
+	body, err := io.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
 		fmt.Println("Failed to read request body:", err)
 		c.Ctx.Output.SetStatus(http.StatusBadRequest)
@@ -183,14 +192,57 @@ func (c *CatController) AddToFavorites() {
 		return
 	}
 
-	// Construct the API URL
-	url := "https://api.thecatapi.com/v1/favourites"
-	if subID != "" {
-		url += "?sub_id=" + subID
+	// Check if the image is already a favorite
+	checkURL := fmt.Sprintf("%s/favourites?sub_id=%s", baseURL, subID)
+	req, err := http.NewRequest("GET", checkURL, nil)
+	if err != nil {
+		fmt.Println("Failed to create GET request to check favorites:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to check existing favorites"}
+		c.ServeJSON()
+		return
 	}
 
+	req.Header.Set("x-api-key", apiKey)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error checking existing favorites:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Failed to check existing favorites"}
+		c.ServeJSON()
+		return
+	}
+	defer resp.Body.Close()
+
+	// Parse the response to check if the image already exists
+	var favorites []map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&favorites)
+	if err != nil {
+		fmt.Println("Failed to decode existing favorites:", err)
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Error decoding existing favorites"}
+		c.ServeJSON()
+		return
+	}
+
+	for _, fav := range favorites {
+		if fav["image_id"] == imageID {
+			c.Ctx.Output.SetStatus(http.StatusConflict)
+			c.Data["json"] = map[string]string{"error": "This image is already a favorite"}
+			c.ServeJSON()
+			return
+		}
+	}
+
+	// Construct the API URL to add the favorite
+	url := fmt.Sprintf("%s/favourites?sub_id=%s", baseURL, subID)
+
 	// Create the payload
-	payload := map[string]string{"image_id": imageID}
+	payload := map[string]string{
+		"image_id": imageID,
+		"sub_id":   subID,
+	}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		fmt.Println("Failed to marshal payload:", err)
@@ -200,10 +252,10 @@ func (c *CatController) AddToFavorites() {
 		return
 	}
 
-	// Create and send the HTTP POST request
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	// Send the POST request to TheCatAPI
+	req, err = http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		fmt.Println("Failed to create HTTP request:", err)
+		fmt.Println("Failed to create POST request:", err)
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
 		c.Data["json"] = map[string]string{"error": "Failed to create request"}
 		c.ServeJSON()
@@ -213,8 +265,7 @@ func (c *CatController) AddToFavorites() {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-api-key", apiKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err = client.Do(req)
 	if err != nil {
 		fmt.Println("HTTP request failed:", err)
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
@@ -240,38 +291,41 @@ func (c *CatController) AddToFavorites() {
 }
 
 // GetFavorites retrieves a user's favorite cats using their sub_id passed as a query parameter
+// GetFavorites retrieves a user's favorite cats using the sub_id from the configuration file
 func (c *CatController) GetFavorites() {
+	// Retrieve sub_id and API key from the configuration file
+	subID := web.AppConfig.DefaultString("cat_api_sub_id", "")
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "https://api.thecatapi.com/v1")
 
-	// Retrieve sub_id from the query parameters (passed from the frontend)
-	subID := c.GetString("sub_id")
 	if subID == "" {
-		c.Ctx.Output.SetStatus(http.StatusBadRequest)
-		c.Data["json"] = map[string]string{"error": "Missing 'sub_id' in the request"}
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "sub_id is not configured on the server"}
 		c.ServeJSON()
 		return
 	}
 
-	// Construct TheCatAPI URL with query parameters
-	url := fmt.Sprintf("https://api.thecatapi.com/v1/favourites?sub_id=%s&limit=20&order=DESC", subID)
+	// Construct the API URL
+	url := fmt.Sprintf("%s/favourites?sub_id=%s", baseURL, subID)
 
-	// Create and send the HTTP GET request
+	// Create the GET request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println("Failed to create HTTP request:", err)
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to create request"}
+		c.Data["json"] = map[string]string{"error": "Error creating request to TheCatAPI"}
 		c.ServeJSON()
 		return
 	}
+
+	// Set the API key in the request headers
 	req.Header.Set("x-api-key", apiKey)
 
+	// Make the HTTP request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("HTTP request failed:", err)
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to fetch favorites"}
+		c.Data["json"] = map[string]string{"error": "Error fetching favorites from TheCatAPI"}
 		c.ServeJSON()
 		return
 	}
@@ -279,27 +333,16 @@ func (c *CatController) GetFavorites() {
 
 	// Check the response status
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		fmt.Println("TheCatAPI Error Response:", string(bodyBytes))
+		body, _ := io.ReadAll(resp.Body)
 		c.Ctx.Output.SetStatus(resp.StatusCode)
-		c.Data["json"] = map[string]string{"error": "Failed to fetch favorites. External API error."}
+		c.Data["json"] = map[string]string{"error": fmt.Sprintf("Failed to fetch favorites from TheCatAPI: %s", string(body))}
 		c.ServeJSON()
 		return
 	}
 
-	// Read and return the response body
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Failed to read response body:", err)
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Failed to read API response"}
-		c.ServeJSON()
-		return
-	}
-
-	// Parse the response body into JSON and return it
+	// Read the response body and forward it to the client
+	body, _ := io.ReadAll(resp.Body)
 	c.Ctx.Output.SetStatus(http.StatusOK)
 	c.Ctx.Output.Header("Content-Type", "application/json")
-	c.Data["json"] = json.RawMessage(bodyBytes)
-	c.ServeJSON()
+	c.Ctx.WriteString(string(body))
 }

@@ -1,0 +1,7 @@
+curl -X POST "https://api.thecatapi.com/v1/favourites" \
+  -H "x-api-key: live_EZGJGvySfH0v5dxewyyMb4b7LG9GF6aOvPe6KFoF7DWVCr2HTzO8tiv6ElBhW0kE" \
+  -H "Content-Type: application/json" \
+  -d '{"image_id": "E8dL1Pqpz", "sub_id": "user_1735011156050_vsscydvmg"}'
+
+user_1735011156050_vsscydvmg
+app.js:218 /favorites?sub_id=user_1735011156050_vsscydvmg

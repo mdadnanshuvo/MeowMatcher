@@ -17,10 +17,10 @@ func init() {
 	beego.Router("/breeds", &controllers.CatController{}, "get:Breeds")
 
 	// Add to Favorites (POST)
-	beego.Router("/favorites", &controllers.CatController{}, "post:AddToFavorites")
+	beego.Router("/add-favourites", &controllers.CatController{}, "post:AddToFavorites")
 
 	// Get Favorites (GET)
-	beego.Router("/favorites", &controllers.CatController{}, "get:GetFavorites")
+	beego.Router("/get-favourites", &controllers.CatController{}, "get:GetFavorites")
 
 	// Breeds with Images
 	beego.Router("/breeds-with-images", &controllers.CatController{}, "get:BreedsWithImages")
