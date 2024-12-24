@@ -19,6 +19,9 @@ type CatController struct {
 
 var breedsCache = cache.NewCache(10 * time.Minute)
 
+// Assume you have a global cache for favorites
+var favoritesCache = cache.NewCache(10 * time.Minute)
+
 // Index renders the homepage
 func (c *CatController) Index() {
 	c.TplName = "index.tpl"
@@ -148,6 +151,27 @@ func isValidCache(data interface{}) bool {
 			return false
 		}
 	}
+	return true
+}
+
+func isValidCacheForFav(data interface{}) bool {
+	// Assuming data is a slice of maps representing the user favorites
+	favorites, ok := data.([]map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	// Validate each favorite
+	for _, favorite := range favorites {
+		// Check if the favorite has an "id" and "image" field (adjust as needed based on the actual structure)
+		if _, hasID := favorite["id"]; !hasID {
+			return false
+		}
+		if _, hasImage := favorite["image"]; !hasImage {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -292,6 +316,16 @@ func (c *CatController) AddToFavorites() {
 
 // GetFavorites retrieves a user's favorite cats using the sub_id from the configuration file
 func (c *CatController) GetFavorites() {
+	// Check cache first
+	if cachedData, found := favoritesCache.Get("user_favorites"); found {
+		if isValidCacheForFav(cachedData) {
+			// If data is valid, return it from the cache
+			c.Data["json"] = cachedData
+			c.ServeJSON()
+			return
+		}
+	}
+
 	// Retrieve sub_id and API key from the configuration file
 	subID := web.AppConfig.DefaultString("cat_api_sub_id", "")
 	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
@@ -339,11 +373,26 @@ func (c *CatController) GetFavorites() {
 		return
 	}
 
-	// Read the response body and forward it to the client
+	// Read the response body
 	body, _ := io.ReadAll(resp.Body)
+
+	// Validate the data before caching it
+	var favoritesData []map[string]interface{}
+	err = json.Unmarshal(body, &favoritesData)
+	if err != nil || !isValidCacheForFav(favoritesData) {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Invalid or corrupted favorites data"}
+		c.ServeJSON()
+		return
+	}
+
+	// Cache the valid data
+	favoritesCache.Set("user_favorites", favoritesData)
+
+	// Return the response to the client
 	c.Ctx.Output.SetStatus(http.StatusOK)
-	c.Ctx.Output.Header("Content-Type", "application/json")
-	c.Ctx.WriteString(string(body))
+	c.Data["json"] = favoritesData // Use the cached or fetched data here
+	c.ServeJSON()
 }
 
 // DeleteFavorite removes a favorite cat from TheCatAPI

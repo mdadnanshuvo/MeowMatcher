@@ -145,52 +145,61 @@ async function loadVoting() {
     }
     
 
-   
-    // Render Cat Content
-function renderCat(cat) {
-    content.innerHTML = `
-    <div class="card" id="cat-${cat.id}">
-        <div class="image-container">
-            <img src="${cat.url}" alt="Random Cat" class="cat-image">
-            <div class="image-overlay">
-                <!-- Heart Button -->
-                <button class="heart" data-id="${cat.id}" data-cat='${JSON.stringify(cat)}'>
-                    <img src="/static/icons/heart.png" alt="Heart Icon">
-                </button>
-                <!-- Like and Dislike Buttons -->
-                <div class="right-buttons">
-                    <button class="upvote" data-id="${cat.id}">
-                        <img src="/static/icons/like.png" alt="Like Icon">
+    function renderCat(cat) {
+        content.innerHTML = `
+        <div class="card" id="cat-${cat.id}">
+            <div class="image-container">
+                <img src="${cat.url}" alt="Random Cat" class="cat-image">
+                <div class="image-overlay">
+                    <!-- Heart Button -->
+                    <button class="heart" data-id="${cat.id}" data-cat='${JSON.stringify(cat)}'>
+                        <img src="/static/icons/heart.png" alt="Heart Icon">
                     </button>
-                    <button class="downvote" data-id="${cat.id}">
-                        <img src="/static/icons/dislike.png" alt="Dislike Icon">
-                    </button>
+                    <!-- Like and Dislike Buttons -->
+                    <div class="right-buttons">
+                        <button class="upvote" data-id="${cat.id}">
+                            <img src="/static/icons/like.png" alt="Like Icon">
+                        </button>
+                        <button class="downvote" data-id="${cat.id}">
+                            <img src="/static/icons/dislike.png" alt="Dislike Icon">
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-`;
-
-    // Event listeners for heart, upvote, and downvote buttons
-    document.querySelector(".heart").addEventListener("click", () => {
-        saveFavorite(cat);
-        localStorage.removeItem("votingData"); // Clear cache after action
-        loadVoting();
-    });
-
-    // Event listener for upvote button
-    document.querySelector(".upvote").addEventListener("click", () => {
-        postVote(cat.id, 1); // 1 for upvote
-        loadVoting();
-    });
-
-    // Event listener for downvote button
-    document.querySelector(".downvote").addEventListener("click", () => {
-        postVote(cat.id, -1); // -1 for downvote
-        loadVoting();
-    });
-}
-
+    `;
+    
+        // Event listener for heart button
+        const heartButton = document.querySelector(".heart");
+        heartButton.addEventListener("click", (event) => {
+            event.preventDefault();  // Prevent default behavior like opening tabs or links
+            event.stopPropagation(); // Stop event bubbling, to avoid triggering parent listeners
+            loadVoting();
+            localStorage.removeItem("votingData"); // Clear cache after action
+            saveFavorite(cat); // Save the favorite cat
+        });
+    
+        // Event listener for upvote button
+        const upvoteButton = document.querySelector(".upvote");
+        upvoteButton.addEventListener("click", (event) => {
+            event.preventDefault();  // Prevent default behavior if necessary
+            event.stopPropagation(); // Stop event bubbling
+            postVote(cat.id, 1); // 1 for upvote
+            loadVoting();
+        });
+    
+        // Event listener for downvote button
+        const downvoteButton = document.querySelector(".downvote");
+        downvoteButton.addEventListener("click", (event) => {
+            event.preventDefault();  // Prevent default behavior if necessary
+            event.stopPropagation(); // Stop event bubbling
+            postVote(cat.id, -1); // -1 for downvote
+            loadVoting();
+        });
+    }
+    
+   
+   
 // Post Vote (upvote or downvote)
 async function postVote(imageId, value) {
     const subId = "user_static_sub_id_12345"; // You can change this to dynamically fetch the user ID
