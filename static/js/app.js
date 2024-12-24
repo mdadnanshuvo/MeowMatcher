@@ -264,14 +264,18 @@ async function loadFavorites() {
 
         if (response.ok) {
             const favorites = await response.json();
-            console.log("Fetched Favorites:", favorites); // Log for debugging
+            console.log("Fetched Favorites (raw):", favorites); // Log for debugging
 
-            if (favorites.length === 0) {
-                content.innerHTML = "<p>You have no favorites yet! ❤️</p>";
+            // Filter out favorites without valid images
+            const validFavorites = favorites.filter(fav => fav.image && fav.image.url);
+            console.log("Valid Favorites:", validFavorites); // Log valid favorites
+
+            if (validFavorites.length === 0) {
+                content.innerHTML = "<p>You have no valid favorites yet! ❤️</p>";
                 return;
             }
 
-            // Render favorites dynamically
+            // Render valid favorites dynamically
             content.innerHTML = `
                 <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
                     <div class="view-toggle flex py-4 bg-white gap-2">
@@ -283,7 +287,7 @@ async function loadFavorites() {
                         </button>
                     </div>
                     <div id="favorites-container" class="grid">
-                        ${favorites
+                        ${validFavorites
                             .map(
                                 (fav, index) => `
                         <div class="grid-view-item" data-index="${index}">
@@ -323,6 +327,7 @@ async function loadFavorites() {
         content.innerHTML = "<p>Unable to fetch favorites. Please try again later.</p>";
     }
 }
+
 
 
 
