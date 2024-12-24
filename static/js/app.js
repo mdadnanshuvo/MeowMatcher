@@ -359,45 +359,43 @@ async function loadVoting() {
    
     // Functions for fav-tav
     
-    function saveFavorite(cat) {
-        const url = '/add-favourites'; // Backend route for adding favorites
-    
-        // Prepare the data to send in the POST request
-        const data = {
-            image_id: cat.id // Send the image ID for the favorite
-        };
-    
-        // Send the POST request to the backend
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data) // Send the payload as JSON
-        })
-        .then(response => {
-            if (response.status === 409) {
-                // Handle duplicate favorite (HTTP 409 Conflict)
-                showToast("This image is already a favorite! ❤️");
-                return response.json(); // Still parse the response for any additional data
-            }
-            return response.json();
-        })
-        .then(responseData => {
-            // Handle the response from the server
-            if (responseData.message) {
-                showToast(responseData.message); // Show success message
-            } else if (responseData.error) {
-                showToast("Error: " + responseData.error); // Show error message
-            }
-        })
-        .catch(error => {
-            // Handle any network or other errors
-            console.error("Error saving favorite:", error);
-            showToast("An error occurred while saving the favorite. Please try again.");
-        });
+    // Save a new favorite to localStorage and then to the API
+function saveFavorite(cat) {
+    const url = '/add-favourites'; // Backend route for adding favorites
+    const data = { image_id: cat.id }; // Send the image ID for the favorite
+
+    // First, save it to localStorage
+    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+    if (!favorites.some(fav => fav.id === cat.id)) {
+        favorites.push(cat);
+        localStorage.setItem('favorites', JSON.stringify(favorites));
     }
-    
+
+    // Immediately render the updated list
+    loadFavorites();
+
+    // Now send the favorite to the backend (API)
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(responseData => {
+        if (responseData.message) {
+            showToast(responseData.message); // Show success message
+        } else if (responseData.error) {
+            showToast("Error: " + responseData.error); // Show error message
+        }
+    })
+    .catch(error => {
+        console.error("Error saving favorite:", error);
+        showToast("An error occurred while saving the favorite. Please try again.");
+    });
+}
+
     
     
     
