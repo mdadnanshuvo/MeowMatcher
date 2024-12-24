@@ -290,7 +290,6 @@ func (c *CatController) AddToFavorites() {
 	c.ServeJSON()
 }
 
-// GetFavorites retrieves a user's favorite cats using their sub_id passed as a query parameter
 // GetFavorites retrieves a user's favorite cats using the sub_id from the configuration file
 func (c *CatController) GetFavorites() {
 	// Retrieve sub_id and API key from the configuration file
@@ -345,4 +344,57 @@ func (c *CatController) GetFavorites() {
 	c.Ctx.Output.SetStatus(http.StatusOK)
 	c.Ctx.Output.Header("Content-Type", "application/json")
 	c.Ctx.WriteString(string(body))
+}
+
+// DeleteFavorite removes a favorite cat from TheCatAPI
+func (c *CatController) DeleteFavorite() {
+	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "https://api.thecatapi.com/v1")
+
+	// Get the favorite ID from the request parameters
+	favID := c.Ctx.Input.Param(":id")
+	if favID == "" {
+		c.Ctx.Output.SetStatus(http.StatusBadRequest)
+		c.Data["json"] = map[string]string{"error": "Favorite ID is required"}
+		c.ServeJSON()
+		return
+	}
+
+	// Construct the API URL for deleting the favorite
+	url := fmt.Sprintf("%s/favourites/%s", baseURL, favID)
+
+	// Create the DELETE request
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Error creating request to TheCatAPI"}
+		c.ServeJSON()
+		return
+	}
+
+	req.Header.Set("x-api-key", apiKey)
+
+	// Make the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
+		c.Data["json"] = map[string]string{"error": "Error sending request to TheCatAPI"}
+		c.ServeJSON()
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check the response status
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		c.Ctx.Output.SetStatus(resp.StatusCode)
+		c.Data["json"] = map[string]string{"error": fmt.Sprintf("Failed to delete favorite: %s", string(body))}
+		c.ServeJSON()
+		return
+	}
+
+	// Successfully deleted the favorite
+	c.Data["json"] = map[string]string{"message": "Favorite deleted successfully"}
+	c.ServeJSON()
 }

@@ -90,20 +90,6 @@ function attachHoverEvents() {
    
 }
 
-function deleteFavorite(id) {
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-    favorites = favorites.filter((fav) => fav.id !== id);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-
-    // Reload favorites and check for images
-    loadFavorites();
-    const favoritesContainer = document.getElementById("favorites-container");
-    const images = favoritesContainer.querySelectorAll("img");
-    if (images.length === 0) {
-        hoverPlaceholder.style.display = "none"; // Hide placeholder when no images are left
-    }
-}
-
 
 
 initializeHoverPlaceholder();
@@ -510,13 +496,6 @@ function attachDeleteHandlers() {
     });
 }
 
-// Delete Favorite Functionality
-function deleteFavorite(id) {
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-    favorites = favorites.filter((fav) => fav.id !== id);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-    loadFavorites();
-}
 
 
 // Attach Click Handlers for Modal Opening
@@ -583,6 +562,43 @@ function attachViewToggleHandlers() {
 }
 
 
+async function deleteFavorite(favID) {
+    const apiUrl = `/delete-favourites/${favID}`; // Backend route for deleting a favorite
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "x-api-key": "your-api-key-here", // Make sure to include the API key
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log("Deleted Favorite:", data); // Log for debugging
+
+            // Remove the deleted favorite from the DOM
+            const favoriteElement = document.querySelector(`.grid-view-item[data-index="${favID}"]`);
+            if (favoriteElement) {
+                favoriteElement.remove();
+            }
+
+            // If there are no remaining favorites, display a message
+            const favoritesContainer = document.getElementById("favorites-container");
+            if (!favoritesContainer || favoritesContainer.children.length === 0) {
+                content.innerHTML = "<p>You have no valid favorites yet! ❤️</p>";
+            }
+        } else {
+            const error = await response.json();
+            console.error("Failed to delete favorite:", error);
+            alert("Failed to delete favorite. Please try again.");
+        }
+    } catch (err) {
+        console.error("Error deleting favorite:", err);
+        alert("An error occurred while deleting the favorite.");
+    }
+}
 
 
 

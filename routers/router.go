@@ -22,6 +22,9 @@ func init() {
 	// Get Favorites (GET)
 	beego.Router("/get-favourites", &controllers.CatController{}, "get:GetFavorites")
 
+	// Delete Favorite (DELETE)
+	beego.Router("/delete-favourites/:id", &controllers.CatController{}, "delete:DeleteFavorite")
+
 	// Breeds with Images
 	beego.Router("/breeds-with-images", &controllers.CatController{}, "get:BreedsWithImages")
 }
