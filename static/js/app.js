@@ -102,7 +102,6 @@ function attachHoverEvents() {
 
 
 initializeHoverPlaceholder();
-
 // Functions for Voting
 
 // Load the Voting Tab

@@ -14,7 +14,6 @@ func init() {
 	beego.Router("/voting", &controllers.CatController{}, "get:VotingCats")
 
 	// Breeds Data
-	beego.Router("/breeds", &controllers.CatController{}, "get:Breeds")
 
 	// Add to Favorites (POST)
 	beego.Router("/add-favourites", &controllers.CatController{}, "post:AddToFavorites")

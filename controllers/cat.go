@@ -48,25 +48,6 @@ func (c *CatController) VotingCats() {
 	c.ServeJSON()
 }
 
-// Breeds fetches all breeds
-func (c *CatController) Breeds() {
-	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
-	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "")
-
-	data, err := channels.FetchDataConcurrently(apiKey, baseURL, map[string]map[string]string{
-		"/breeds": nil,
-	})
-	if err != nil {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	c.Data["json"] = data["/breeds"]
-	c.ServeJSON()
-}
-
 // BreedsWithImages fetches breeds with associated images
 func (c *CatController) BreedsWithImages() {
 	if cachedData, found := breedsCache.Get("breeds_with_images"); found {
@@ -316,83 +297,92 @@ func (c *CatController) AddToFavorites() {
 
 // GetFavorites retrieves a user's favorite cats using the sub_id from the configuration file
 func (c *CatController) GetFavorites() {
-	// Check cache first
-	if cachedData, found := favoritesCache.Get("user_favorites"); found {
-		if isValidCacheForFav(cachedData) {
-			// If data is valid, return it from the cache
-			c.Data["json"] = cachedData
-			c.ServeJSON()
+	// Channel for passing favorites data between goroutines
+	dataChannel := make(chan []map[string]interface{})
+	errorChannel := make(chan error)
+
+	// Goroutine for fetching the data from TheCatAPI
+	go func() {
+		// Check cache first
+		if cachedData, found := favoritesCache.Get("user_favorites"); found {
+			if isValidCacheForFav(cachedData) {
+				// If data is valid, return it from the cache
+				dataChannel <- cachedData.([]map[string]interface{})
+				return
+			}
+		}
+
+		// Retrieve sub_id and API key from the configuration file
+		subID := web.AppConfig.DefaultString("cat_api_sub_id", "")
+		apiKey := web.AppConfig.DefaultString("cat_api_key", "")
+		baseURL := web.AppConfig.DefaultString("cat_api_base_url", "https://api.thecatapi.com/v1")
+
+		if subID == "" {
+			errorChannel <- fmt.Errorf("sub_id is not configured on the server")
 			return
 		}
-	}
 
-	// Retrieve sub_id and API key from the configuration file
-	subID := web.AppConfig.DefaultString("cat_api_sub_id", "")
-	apiKey := web.AppConfig.DefaultString("cat_api_key", "")
-	baseURL := web.AppConfig.DefaultString("cat_api_base_url", "https://api.thecatapi.com/v1")
+		// Construct the API URL
+		url := fmt.Sprintf("%s/favourites?sub_id=%s", baseURL, subID)
 
-	if subID == "" {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "sub_id is not configured on the server"}
-		c.ServeJSON()
-		return
-	}
+		// Create the GET request
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			errorChannel <- fmt.Errorf("Error creating request to TheCatAPI: %v", err)
+			return
+		}
 
-	// Construct the API URL
-	url := fmt.Sprintf("%s/favourites?sub_id=%s", baseURL, subID)
+		// Set the API key in the request headers
+		req.Header.Set("x-api-key", apiKey)
 
-	// Create the GET request
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Error creating request to TheCatAPI"}
-		c.ServeJSON()
-		return
-	}
+		// Make the HTTP request
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			errorChannel <- fmt.Errorf("Error fetching favorites from TheCatAPI: %v", err)
+			return
+		}
+		defer resp.Body.Close()
 
-	// Set the API key in the request headers
-	req.Header.Set("x-api-key", apiKey)
+		// Check the response status
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			errorChannel <- fmt.Errorf("Failed to fetch favorites from TheCatAPI: %s", string(body))
+			return
+		}
 
-	// Make the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Error fetching favorites from TheCatAPI"}
-		c.ServeJSON()
-		return
-	}
-	defer resp.Body.Close()
-
-	// Check the response status
-	if resp.StatusCode != http.StatusOK {
+		// Read the response body
 		body, _ := io.ReadAll(resp.Body)
-		c.Ctx.Output.SetStatus(resp.StatusCode)
-		c.Data["json"] = map[string]string{"error": fmt.Sprintf("Failed to fetch favorites from TheCatAPI: %s", string(body))}
+
+		// Validate the data before caching it
+		var favoritesData []map[string]interface{}
+		err = json.Unmarshal(body, &favoritesData)
+		if err != nil || !isValidCacheForFav(favoritesData) {
+			errorChannel <- fmt.Errorf("Invalid or corrupted favorites data")
+			return
+		}
+
+		// Cache the valid data
+		favoritesCache.Set("user_favorites", favoritesData)
+
+		// Send the data back through the channel
+		dataChannel <- favoritesData
+	}()
+
+	// Wait for either data or error from the channels
+	select {
+	case favoritesData := <-dataChannel:
+		// Successfully fetched data, return the response
+		c.Ctx.Output.SetStatus(http.StatusOK)
+		c.Data["json"] = favoritesData
 		c.ServeJSON()
-		return
-	}
 
-	// Read the response body
-	body, _ := io.ReadAll(resp.Body)
-
-	// Validate the data before caching it
-	var favoritesData []map[string]interface{}
-	err = json.Unmarshal(body, &favoritesData)
-	if err != nil || !isValidCacheForFav(favoritesData) {
+	case err := <-errorChannel:
+		// An error occurred, return the error response
 		c.Ctx.Output.SetStatus(http.StatusInternalServerError)
-		c.Data["json"] = map[string]string{"error": "Invalid or corrupted favorites data"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
-		return
 	}
-
-	// Cache the valid data
-	favoritesCache.Set("user_favorites", favoritesData)
-
-	// Return the response to the client
-	c.Ctx.Output.SetStatus(http.StatusOK)
-	c.Data["json"] = favoritesData // Use the cached or fetched data here
-	c.ServeJSON()
 }
 
 // DeleteFavorite removes a favorite cat from TheCatAPI
