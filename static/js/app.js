@@ -661,17 +661,19 @@ function attachViewToggleHandlers() {
 }
 
 
+// Show Toast Notification
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
 
 
 
-    // Show Toast Notification
-    function showToast(message) {
-        const toast = document.createElement("div");
-        toast.className = "toast";
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-    }
+
+    
 });
 
 
