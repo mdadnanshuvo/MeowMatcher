@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize the app with the default tab
     loadVoting();
-
+    loadBreeds;
    
 // Adding Icons to Tabs Dynamically
 tabs.forEach((tab) => {
@@ -267,42 +267,49 @@ async function postVote(imageId, value) {
 
 
 
-    function renderBreeds(breeds) {
+    function renderBreeds(breeds, selectedBreed = null) {
         const content = document.getElementById("cat-content");
+        const breed = selectedBreed || breeds[0]; // Use selected breed if provided, otherwise default to the first breed
     
-        // Assuming only one breed is displayed
-        const breed = breeds[0];
         content.innerHTML = `
             <div class="breeds-search">
                 <input 
                     type="text" 
                     id="breed-search" 
                     class="search-input" 
-                    placeholder="Search ${breed.name}" 
+                    placeholder="Search breeds" 
                     autocomplete="off">
                 <ul id="suggestions" class="suggestions-list"></ul>
             </div>
             <div class="carousel-item">
                 <div class="carousel-images-wrapper">
                     <div class="carousel-images" id="carousel-${breed.id}">
-                        ${breed.images.map((image, imgIndex) => `
+                        ${breed.images
+                            .map(
+                                (image, imgIndex) => `
                             <img 
                                 src="${image.url}" 
                                 alt="${breed.name} Image ${imgIndex + 1}" 
                                 class="carousel-img ${imgIndex === 0 ? "active" : ""}">
-                        `).join("")}
+                        `
+                            )
+                            .join("")}
                     </div>
                     <div class="carousel-nav left" id="left-nav-${breed.id}">&lt;</div>
                     <div class="carousel-nav right" id="right-nav-${breed.id}">&gt;</div>
                 </div>
                 <div class="carousel-dots" id="dots-${breed.id}">
-                    ${breed.images.map((_, imgIndex) => `
+                    ${breed.images
+                        .map(
+                            (_, imgIndex) => `
                         <span 
                             class="dot ${imgIndex === 0 ? "active" : ""}" 
                             data-index="${imgIndex}" 
                             data-breed="${breed.id}">
                         </span>
-                    `).join("")}
+                    `
+                        )
+                        .join("")}
                 </div>
                 <div class="breed-details">
                     <h2>${breed.name}</h2>
@@ -315,8 +322,11 @@ async function postVote(imageId, value) {
             </div>
         `;
     
+        // Reinitialize the carousel for the selected breed
         initializeCarouselForBreed(breed.id, breed.images.length);
-        setupSearchBar(breeds); // Initialize search bar functionality
+    
+        // Reinitialize the search bar with the full list of breeds
+        setupSearchBar(breeds);
     }
     
     
@@ -358,52 +368,69 @@ async function postVote(imageId, value) {
         updateCarousel(currentIndex);
     }
     
-   
 
-    function setupSearchBar(breeds) {
-        const searchInput = document.getElementById("breed-search");
-        const suggestionsList = document.getElementById("suggestions");
-    
-        // Populate suggestions when the search bar is focused
-        searchInput.addEventListener("focus", () => {
-            renderSuggestions(breeds);
-        });
-    
-        // Handle input typing for dynamic suggestions
-        searchInput.addEventListener("input", (e) => {
-            const query = e.target.value.toLowerCase();
-            const filteredBreeds = breeds.filter((breed) =>
-                breed.name.toLowerCase().includes(query)
-            );
-            renderSuggestions(filteredBreeds);
-        });
-    
-        // Handle suggestion click
-        suggestionsList.addEventListener("click", (e) => {
-            if (e.target.classList.contains("suggestion-item")) {
-                const selectedBreed = breeds.find((breed) => breed.name === e.target.textContent.trim());
-                if (selectedBreed) renderBreeds([selectedBreed]); // Re-render with selected breed
-                suggestionsList.style.display = "none"; // Hide suggestions after selection
-            }
-        });
-    
-        // Close suggestions when clicking outside
-        document.addEventListener("click", (e) => {
-            if (!suggestionsList.contains(e.target) && e.target !== searchInput) {
-                suggestionsList.style.display = "none";
-            }
-        });
-    
-        // Helper to render suggestions
-        function renderSuggestions(filteredBreeds) {
-            suggestionsList.innerHTML = filteredBreeds
-                .map((breed) => `<li class="suggestion-item">${breed.name}</li>`)
-                .join("");
-            suggestionsList.style.display = filteredBreeds.length ? "block" : "none";
+   function setupSearchBar(breeds) {
+    const searchInput = document.getElementById("breed-search");
+    const suggestionsList = document.getElementById("suggestions");
+
+    // Populate suggestions when the search bar is focused
+    searchInput.addEventListener("focus", () => {
+        if (!searchInput.value.trim()) {
+            renderSuggestions(breeds); // Show full list if input is empty
         }
+        suggestionsList.style.display = "block"; // Show suggestions dropdown
+    });
+
+    // Handle input typing for dynamic suggestions
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filteredBreeds = query
+            ? breeds.filter((breed) =>
+                  breed.name.toLowerCase().includes(query)
+              )
+            : breeds; // Show full list if input is empty
+        renderSuggestions(filteredBreeds);
+
+        if (filteredBreeds.length) {
+            suggestionsList.style.display = "block"; // Show dropdown only if there are suggestions
+        } else {
+            suggestionsList.style.display = "none"; // Hide dropdown if no suggestions match
+        }
+    });
+
+    // Handle suggestion click
+    suggestionsList.addEventListener("click", (e) => {
+        if (e.target.classList.contains("suggestion-item")) {
+            const selectedBreed = breeds.find(
+                (breed) => breed.name === e.target.textContent.trim()
+            );
+            if (selectedBreed) {
+                renderBreeds(breeds, selectedBreed); // Render the full list with the selected breed highlighted
+                searchInput.value = ""; // Clear the search bar
+                suggestionsList.style.display = "none"; // Hide suggestions
+            }
+        }
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!suggestionsList.contains(e.target) && e.target !== searchInput) {
+            suggestionsList.style.display = "none"; // Hide suggestions
+        }
+    });
+
+    // Helper to render suggestions
+    function renderSuggestions(breeds) {
+        suggestionsList.innerHTML = breeds
+            .map((breed) => `<li class="suggestion-item">${breed.name}</li>`)
+            .join("");
     }
-    
-   
+
+    // Initialize with the full list but keep suggestions hidden
+    searchInput.value = ""; // Clear input on initialization
+    suggestionsList.style.display = "none"; // Hide suggestions initially
+}
+
    
    
     // Functions for fav-tav
