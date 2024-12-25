@@ -1026,4 +1026,282 @@ button:hover img {
 
 
 
+/* Style for the navigation buttons in the modal */
+.modal-nav .nav-btn {
+    background-color: #007BFF; /* Professional blue color */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin: 5px; /* Add some spacing between buttons */
+}
 
+.modal-nav .nav-btn:hover {
+    background-color: #0056b3; /* Darker blue for hover effect */
+    transform: scale(1.05); /* Slightly enlarge the button */
+}
+
+.modal-nav .nav-btn:active {
+    background-color: #004085; /* Even darker blue for active state */
+    transform: scale(0.95); /* Slightly shrink for click feedback */
+}
+
+/* Ensure buttons are visually distinct and accessible */
+.modal-nav .nav-btn:focus {
+    outline: 2px solid #0056b3; /* Highlight on focus for accessibility */
+    outline-offset: 2px;
+}
+
+.modal-nav {
+    display: flex;
+    justify-content: center; /* Center the buttons horizontally */
+    align-items: center; /* Align the buttons vertically */
+    gap: 10px; /* Add spacing between buttons */
+    margin-top: 15px; /* Add some space above the buttons */
+}
+
+
+
+
+/* General Responsive Adjustments */
+body {
+    font-size: 16px; /* Default font size */
+}
+
+@media (max-width: 1200px) {
+    body {
+        font-size: 15px; /* Slightly smaller font for medium screens */
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 14px; /* Adjust font for mobile devices */
+    }
+
+    main {
+        padding: 15px; /* Reduce padding for smaller screens */
+    }
+
+    .nav {
+        flex-direction: column; /* Stack navigation vertically */
+        padding: 10px;
+        align-items: flex-start; /* Align items to the left */
+    }
+
+    .nav a {
+        font-size: 16px; /* Reduce font size for nav links */
+        margin: 5px 0; /* Add spacing between stacked links */
+    }
+}
+
+/* Responsive Modal */
+.modal-content {
+    width: 90%; /* Adjust modal width for smaller screens */
+    max-width: 500px; /* Limit maximum width */
+    padding: 15px; /* Adjust padding for better fit */
+}
+
+.modal-img {
+    max-width: 100%; /* Ensure image is fully responsive */
+    max-height: 60vh; /* Limit height to fit smaller screens */
+}
+
+.modal-nav .nav-btn {
+    font-size: 14px; /* Adjust button size for smaller screens */
+    padding: 8px 15px; /* Adjust padding */
+}
+
+/* Responsive Carousel */
+@media (max-width: 768px) {
+    .carousel-item {
+        padding: 15px; /* Reduce padding */
+        max-width: 100%; /* Ensure carousel fits mobile screens */
+    }
+
+    .carousel-images-wrapper {
+        height: 200px; /* Adjust carousel height */
+    }
+
+    .carousel-img {
+        object-fit: contain; /* Prevent cropping on small screens */
+    }
+
+    .carousel-nav {
+        width: 30px; /* Smaller navigation buttons */
+        height: 30px;
+        font-size: 16px; /* Adjust icon size */
+    }
+}
+
+/* Responsive Grid View */
+@media (max-width: 768px) {
+    .grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Adjust grid column sizes */
+    }
+
+    .grid-view-item {
+        margin: 5px; /* Reduce margin between items */
+    }
+
+    .grid-view-item img {
+        border-radius: 6px; /* Slightly smaller corner radius */
+    }
+}
+
+/* Responsive Search Bar */
+@media (max-width: 768px) {
+    .search-input {
+        font-size: 14px; /* Adjust font size */
+        padding: 10px; /* Adjust padding */
+    }
+
+    .suggestions-list {
+        font-size: 14px; /* Adjust suggestion font size */
+        max-height: 200px; /* Reduce height for smaller screens */
+    }
+}
+
+/* Favorites Container */
+@media (max-width: 768px) {
+    #favorites-container {
+        max-height: 300px; /* Reduce height for mobile devices */
+        padding: 5px; /* Reduce padding */
+    }
+
+    .list-view-item img {
+        width: 80px; /* Smaller image size */
+        height: 80px;
+    }
+
+    .delete-icon-container {
+        width: 20px; /* Smaller delete icon */
+        height: 20px;
+    }
+}
+
+/* Responsive Breed Details */
+@media (max-width: 768px) {
+    .breed-details {
+        padding: 10px; /* Reduce padding */
+    }
+
+    .breed-details h2 {
+        font-size: 18px; /* Smaller font size */
+    }
+
+    .breed-details p {
+        font-size: 14px;
+    }
+}
+
+/* Toast Notifications */
+@media (max-width: 768px) {
+    .toast {
+        font-size: 14px; /* Adjust font size for smaller screens */
+        padding: 8px 15px;
+    }
+}
+
+/* Heart, Like, and Dislike Buttons on Mobile */
+@media (max-width: 768px) {
+    .image-overlay {
+        opacity: 1; /* Always visible on mobile */
+        background: rgba(0, 0, 0, 0.4); /* Add a slight background for contrast */
+        padding: 5px;
+        bottom: 0; /* Align buttons at the bottom */
+        height: auto; /* Ensure buttons fit in the overlay */
+    }
+
+    .right-buttons, .heart {
+        gap: 5px; /* Reduce gap between buttons */
+    }
+
+    button img {
+        width: 24px; /* Smaller button icons */
+        height: 24px;
+    }
+
+    .heart {
+        font-size: 24px; /* Adjust size for mobile */
+    }
+}
+
+/* Tabs Styling */
+.nav {
+    display: flex;
+    justify-content: center; /* Center tabs by default */
+    flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+    gap: 10px; /* Add spacing between tabs */
+    padding: 10px;
+    background-color: #ffffff; /* Clean white background */
+    border-bottom: 2px solid #ddd;
+}
+
+.nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.nav a.active {
+    color: #fff;
+    background-color: #007BFF; /* Highlight active tab */
+}
+
+.nav a:hover {
+    background-color: #e7f3ff; /* Light blue hover effect */
+    color: #333;
+}
+
+/* Tabs on Mobile */
+@media (max-width: 768px) {
+    .nav {
+        flex-direction: column; /* Stack tabs vertically */
+        align-items: stretch; /* Ensure full-width for each tab */
+        gap: 5px; /* Reduce spacing between tabs */
+    }
+
+    .nav a {
+        font-size: 14px; /* Adjust font size */
+        padding: 10px 12px; /* Adjust padding */
+    }
+}
+
+/* Tabs Icons (Optional) */
+.tab-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+/* Button Hover Effects */
+button {
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: scale(1.1); /* Slight zoom effect */
+    filter: brightness(1.2); /* Slight brightness increase */
+}
+
+/* Tabs Smooth Transitions */
+.nav a {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+}
+
+.nav a:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhance shadow on hover */
+}

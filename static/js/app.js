@@ -171,6 +171,7 @@ async function loadVoting() {
         // Event listener for heart button
         const heartButton = document.querySelector(".heart");
         heartButton.addEventListener("click", (event) => {
+            showToast("You favorited this cat! ❤️");
             event.preventDefault();  // Prevent default behavior like opening tabs or links
             event.stopPropagation(); // Stop event bubbling, to avoid triggering parent listeners
             loadVoting();
@@ -181,6 +182,7 @@ async function loadVoting() {
         // Event listener for upvote button
         const upvoteButton = document.querySelector(".upvote");
         upvoteButton.addEventListener("click", (event) => {
+            showToast("You upvoted this cat! ❤️");
             event.preventDefault();  // Prevent default behavior if necessary
             event.stopPropagation(); // Stop event bubbling
             postVote(cat.id, 1); // 1 for upvote
@@ -190,6 +192,7 @@ async function loadVoting() {
         // Event listener for downvote button
         const downvoteButton = document.querySelector(".downvote");
         downvoteButton.addEventListener("click", (event) => {
+            showToast("You downvoted this cat. 😞");
             event.preventDefault();  // Prevent default behavior if necessary
             event.stopPropagation(); // Stop event bubbling
             postVote(cat.id, -1); // -1 for downvote
@@ -222,9 +225,9 @@ async function postVote(imageId, value) {
         const data = await response.json();
         if (response.ok) {
             if (value === 1) {
-                showToast("You upvoted this cat! ❤️");
+             
             } else {
-                showToast("You downvoted this cat. 😞");
+                
             }
         } else {
             showToast(`Error: ${data.error || "Unable to vote"}`);
@@ -451,7 +454,7 @@ async function postVote(imageId, value) {
             .then(response => response.json())
             .then(responseData => {
                 if (responseData.message) {
-                    showToast(responseData.message); // Show success message
+                   
                     loadFavorites(); // Refresh the favorites list
                 } else if (responseData.error) {
                     showToast("Error: " + responseData.error); // Show error message
