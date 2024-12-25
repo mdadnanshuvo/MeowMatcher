@@ -409,47 +409,37 @@ async function postVote(imageId, value) {
     // Functions for fav-tav
     
     // Save a new favorite to localStorage and then to the API
-function saveFavorite(cat) {
-    const url = '/add-favourites'; // Backend route for adding favorites
-    const data = { image_id: cat.id }; // Send the image ID for the favorite
-
-    // First, save it to localStorage
-    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    if (!favorites.some(fav => fav.id === cat.id)) {
-        favorites.push(cat);
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-    }
-
-    // Immediately render the updated list
-    loadFavorites();
-
-    // Now send the favorite to the backend (API)
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(responseData => {
-        if (responseData.message) {
-            showToast(responseData.message); // Show success message
-        } else if (responseData.error) {
-            showToast("Error: " + responseData.error); // Show error message
-        }
-    })
-    .catch(error => {
-        console.error("Error saving favorite:", error);
-        showToast("An error occurred while saving the favorite. Please try again.");
-    });
-}
-
+    function saveFavorite(cat) {
+        const url = '/add-favourites'; // Backend route for adding favorites
+        const data = { image_id: cat.id }; // Send the image ID for the favorite
     
+        // Now send the favorite to the backend (API)
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(responseData => {
+                if (responseData.message) {
+                    showToast(responseData.message); // Show success message
+                    loadFavorites(); // Refresh the favorites list
+                } else if (responseData.error) {
+                    showToast("Error: " + responseData.error); // Show error message
+                }
+            })
+            .catch(error => {
+                console.error("Error saving favorite:", error);
+                showToast("An error occurred while saving the favorite. Please try again.");
+            });
+    }
     
     
     async function loadFavorites() {
         const apiUrl = '/get-favourites'; // Backend route for fetching favorites
+        const content = document.getElementById("cat-content");
     
         try {
             const response = await fetch(apiUrl, {
@@ -484,17 +474,14 @@ function saveFavorite(cat) {
                             </button>
                         </div>
                         <div id="favorites-container" class="grid">
-                            ${validFavorites
-                                .map(
-                                    (fav, index) => `
-                            <div class="grid-view-item" data-index="${index}">
-                                <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
-                                <div class="delete-icon-container">
-                                    <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                            ${validFavorites.map((fav, index) => `
+                                <div class="grid-view-item" data-id="${fav.id}" data-index="${index}">
+                                    <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
+                                    <div class="delete-icon-container">
+                                        <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                                    </div>
                                 </div>
-                            </div>`
-                                )
-                                .join("")}
+                            `).join("")}
                         </div>
                         <div id="image-modal" class="modal hidden">
                             <div class="modal-content">
@@ -509,11 +496,11 @@ function saveFavorite(cat) {
                     </div>
                 `;
     
-                // Attach event handlers for hover, delete, and click actions
+                // Attach event handlers for hover, delete, modal, and view toggle actions
                 attachHoverEvents();
                 attachDeleteHandlers();
-                attachClickHandlers();
-                attachViewToggleHandlers();
+                attachClickHandlers(validFavorites);
+                attachViewToggleHandlers(); // Ensure view toggle works
             } else {
                 const error = await response.json();
                 console.error("Failed to fetch favorites:", error);
@@ -534,35 +521,37 @@ function saveFavorite(cat) {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-api-key": "your-api-key-here", // Make sure to include the API key
                 },
             });
     
             if (response.ok) {
-                const data = await response.json();
-                console.log("Deleted Favorite:", data); // Log for debugging
+                console.log(`Deleted Favorite ID: ${favID}`);
     
                 // Remove the deleted favorite from the DOM
-                const favoriteElement = document.querySelector(`.grid-view-item[data-index="${favID}"]`);
+                const favoriteElement = document.querySelector(`.grid-view-item[data-id="${favID}"]`);
                 if (favoriteElement) {
                     favoriteElement.remove();
                 }
     
-                // If there are no remaining favorites, display a message
+                // Check if there are remaining favorites
                 const favoritesContainer = document.getElementById("favorites-container");
                 if (!favoritesContainer || favoritesContainer.children.length === 0) {
+                    const content = document.getElementById("cat-content");
                     content.innerHTML = "<p>You have no valid favorites yet! ❤️</p>";
                 }
+    
+                showToast("Favorite deleted successfully!");
             } else {
                 const error = await response.json();
                 console.error("Failed to delete favorite:", error);
-                alert("Failed to delete favorite. Please try again.");
+                showToast(`Error: ${error.error || "Failed to delete favorite. Please try again."}`);
             }
         } catch (err) {
             console.error("Error deleting favorite:", err);
-            alert("An error occurred while deleting the favorite.");
+            showToast("An error occurred while deleting the favorite.");
         }
     }
+    
     
     
 
