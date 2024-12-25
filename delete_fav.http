@@ -1,2 +1,0 @@
-curl -X DELETE "http://localhost:8080/delete-favourites/232505375" \
--H "Content-Type: application/json"

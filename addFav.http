@@ -1,4 +1,0 @@
-curl -X POST "http://localhost:8080/add-favourites" \
--H "Content-Type: application/json" \
--H "x-api-key: live_EZGJGvySfH0v5dxewyyMb4b7LG9GF6aOvPe6KFoF7DWVCr2HTzO8tiv6ElBhW0kE" \
--d '{"image_id": "19J7"}'
