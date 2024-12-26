@@ -183,3 +183,73 @@ http://localhost:8080
 {
   "image_id": "abcd1234"
 }
+
+```
+## **3. GET /cats/favorites**
+---------------------------
+
+**Function**: `GetFavoriteCats`  
+**Controller**: `CatController`  
+**Description**:
+- Retrieves a list of **favorited** cat images for the user.
+- Returns a **200 OK** response with a JSON array of the user’s favorited cat images.
+
+**Response**:
+- **200 OK**: A JSON array of favorited cat images.
+
+```json
+[
+  {
+    "id": "abcd1234",
+    "url": "https://example.com/fav_cat1.jpg",
+    "breeds": [{"id": "beng", "name": "Bengal"}]
+  },
+  ...
+]
+```
+
+## **4. DELETE /cats/favorite**
+
+**Function**: `UnfavoriteCat`  
+**Controller**: `CatController`  
+**Description**:
+- Removes a cat image from the user’s **favorites** list.
+- Accepts the `image_id` to identify the cat image to remove from favorites.
+- Responds with **200 OK** status when the image is successfully removed.
+
+**Request Body**:
+
+```json
+{
+  "image_id": "abcd1234"
+}
+```
+
+## **5. GET /cats/{id}**
+
+**Function**: `GetCatById`  
+**Controller**: `CatController`  
+**Description**:
+- Retrieves a specific cat image by its unique `id`.
+- Useful for fetching detailed information about a particular cat image.
+
+**Response**:
+- **200 OK**: A JSON object containing the image details.
+
+```json
+{
+  "id": "abcd1234",
+  "url": "https://example.com/cat1.jpg",
+  "breeds": [{"id": "beng", "name": "Bengal"}],
+  "width": 400,
+  "height": 300
+}
+```
+
+
+### Explanation:
+- The **Function** and **Controller** describe the corresponding action and the controller handling the endpoint.
+- The **Description** clearly defines the behavior of the endpoint.
+- The **Response** section provides a sample JSON object that represents the image details returned by the API.
+
+
