@@ -476,8 +476,7 @@ async function postVote(imageId, value) {
                 // Log the updated favorites in localStorage to confirm
                 console.log("Updated favorites in localStorage:", JSON.parse(localStorage.getItem("favorites")));
     
-                // Optionally, refresh the favorites UI by loading them again from localStorage
-                loadFavorites();
+                
             } else if (responseData.error) {
                 showToast("Error: " + responseData.error); // Show error message
             }
@@ -495,6 +494,9 @@ async function postVote(imageId, value) {
     
         // Try to load favorites from localStorage first
         let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    
+        // Debugging log to check the contents of localStorage
+        console.log("Loaded favorites from localStorage:", favorites);
     
         // If there are no valid favorites in localStorage, fetch from the backend
         if (favorites.length === 0) {
@@ -541,6 +543,9 @@ async function postVote(imageId, value) {
                 return;
             }
         }
+    
+        // Debugging log to check final favorites data
+        console.log("Final favorites to render:", favorites);
     
         // Render valid favorites dynamically from localStorage or API
         content.innerHTML = `
@@ -607,11 +612,20 @@ async function postVote(imageId, value) {
                     favoriteElement.remove();
                 }
     
-                // Check if there are remaining favorites
-                const favoritesContainer = document.getElementById("favorites-container");
-                if (!favoritesContainer || favoritesContainer.children.length === 0) {
+                // Remove the deleted favorite from localStorage
+                let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+                favorites = favorites.filter(fav => fav.id !== favID);  // Remove the favorite with matching ID
+    
+                // Update localStorage with the new favorites list
+                localStorage.setItem("favorites", JSON.stringify(favorites));
+    
+                // If there are no favorites left, display the "no favorites" message
+                if (favorites.length === 0) {
                     const content = document.getElementById("cat-content");
                     content.innerHTML = "<p>You have no valid favorites yet! ❤️</p>";
+                } else {
+                    // Otherwise, re-render the favorites from localStorage
+                    renderFavorites(favorites);
                 }
     
                 showToast("Favorite deleted successfully!");
@@ -624,6 +638,50 @@ async function postVote(imageId, value) {
             console.error("Error deleting favorite:", err);
             showToast("An error occurred while deleting the favorite.");
         }
+    }
+    
+    function renderFavorites(favorites) {
+        const content = document.getElementById("cat-content");
+    
+        // Render valid favorites dynamically
+        content.innerHTML = `
+            <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
+                <div class="view-toggle flex py-4 bg-white gap-2">
+                    <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
+                        <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">Grid View
+                    </button>
+                    <button class="toggle-btn" id="list-view" role="button" tabindex="0">
+                        <img src="/static/icons/list-view.png" alt="List View" class="view-icon">List View
+                    </button>
+                </div>
+                <div id="favorites-container" class="grid">
+                    ${favorites.map((fav, index) => `
+                        <div class="grid-view-item" data-id="${fav.id}" data-index="${index}">
+                            <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
+                            <div class="delete-icon-container">
+                                <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+                <div id="image-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
+                        <div class="modal-nav">
+                            <button id="prev-image" class="nav-btn">Prev</button>
+                            <button id="next-image" class="nav-btn">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+        // Attach event handlers for hover, delete, modal, and view toggle actions
+        attachHoverEvents();
+        attachDeleteHandlers();
+        attachClickHandlers(favorites); // Ensure that the favorites array is passed to the click handlers
+        attachViewToggleHandlers(); // Ensure view toggle works
     }
     
     
