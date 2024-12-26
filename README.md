@@ -185,10 +185,10 @@ http://localhost:8080
 }
 
 ```
-## **3. GET /cats/favorites**
+## **3. GET /get-favourites**
 ---------------------------
 
-**Function**: `GetFavoriteCats`  
+**Function**: `GetFavorites`  
 **Controller**: `CatController`  
 **Description**:
 - Retrieves a list of **favorited** cat images for the user.
@@ -208,9 +208,9 @@ http://localhost:8080
 ]
 ```
 
-## **4. DELETE /cats/favorite**
+## **4. DELETE /delete-favourites/:id**
 
-**Function**: `UnfavoriteCat`  
+**Function**: `DeleteFavorite`  
 **Controller**: `CatController`  
 **Description**:
 - Removes a cat image from the user’s **favorites** list.
@@ -225,9 +225,9 @@ http://localhost:8080
 }
 ```
 
-## **5. GET /cats/{id}**
+## **5. GET /breeds-with-images**
 
-**Function**: `GetCatById`  
+**Function**: `BreedsWithImages`  
 **Controller**: `CatController`  
 **Description**:
 - Retrieves a specific cat image by its unique `id`.
