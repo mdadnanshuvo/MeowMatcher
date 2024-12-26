@@ -2,9 +2,9 @@
 
 ## Project Description
 
-**catAPIProject** is a robust and scalable platform built on **The Cat API**, offering a wide range of cat-related data to enhance user experience in applications. The project utilizes data from **The Cat API** to deliver random cat images, detailed breed information, and fun facts about cats. With over 60,000 images, breed data, and real-time API interactions, this project allows developers to integrate cat-related content into their services.
+**MeowMatcher** is a robust and scalable platform built on **The Cat API**, offering a wide range of cat-related data to enhance user experience in applications. The project utilizes data from **The Cat API** to deliver random cat images, detailed breed information, and fun facts about cats. With over 60,000 images, breed data, and real-time API interactions, this project allows developers to integrate cat-related content into their services.
 
-The key focus of the **catAPIProject** is to:
+The key focus of the **MeowMatcher** is to:
 
 - **Provide access to a vast collection of cat images**: With over 60,000 images available, you can easily access random or breed-specific cat images.
 - **Retrieve detailed cat breed information**: Detailed data about various breeds, including characteristics, origin, temperament, and lifespan.
