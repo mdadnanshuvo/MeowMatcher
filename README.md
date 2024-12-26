@@ -252,4 +252,54 @@ http://localhost:8080
 - The **Description** clearly defines the behavior of the endpoint.
 - The **Response** section provides a sample JSON object that represents the image details returned by the API.
 
+## Running Tests with Coverage
 
+To run tests and track code coverage for your **MeowMatcher** project, follow these steps:
+
+### 1. **Run Tests with Coverage**
+
+Execute the following command to run all tests and generate a coverage report:
+
+```bash
+go test -coverprofile=coverage.out ./...
+```
+*   `-coverprofile=coverage.out`: This flag tells Go to generate a coverage report and save it to the file `coverage.out`.
+*   `./...`: This runs tests for all packages in the project, including subdirectories.
+
+### 2. **View Coverage Report**
+
+Once the tests have been executed, you can view the detailed HTML coverage report by running:
+
+```bash
+go tool cover -html=coverage.out
+```
+
+This will generate an HTML file and open it in your default browser. The report will highlight lines of code that are covered by tests (in green) and those that are not (in red).
+
+### 3. **View Coverage in Terminal**
+
+For a quick summary of the overall test coverage in the terminal, you can run:
+
+```bash
+go test -cover ./...
+```
+This will show the percentage of statements covered by the tests, like this:
+
+```
+coverage: 80.0% of statements
+
+```
+
+
+### 4. **Detailed Coverage Report by Function**
+
+To get a detailed coverage report of each function in your project, use the following command:
+
+```bash
+go tool cover -func=coverage.out
+```
+This will output coverage information for each function, showing which functions are fully tested and which ones are not. For example:
+```
+github.com/yourusername/MeowMatcher/caches/cache.go:35:   GetCats      100.0%
+github.com/yourusername/MeowMatcher/controllers/cat.go:12:   GetFavoriteCats    80.0%
+```
