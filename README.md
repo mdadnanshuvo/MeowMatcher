@@ -143,8 +143,8 @@ http://localhost:8080
 
 ## Controller Documentation: `CatController`
 
-### 1. **GET /cats**
-**Function**: `GetCats`
+### 1. **GET /voting**
+**Function**: `VotingCats`
 
 **Description**: 
 - Retrieves a list of cat images from the **Cat API**.
@@ -167,9 +167,9 @@ http://localhost:8080
 ]
 ```
 
-### 2. **POST /cats/favorite**
+### 2. **POST /add-favourites**
 
-**Function**: `FavoriteCat`
+**Function**: `AddToFavorites`
 
 **Description**:
 
