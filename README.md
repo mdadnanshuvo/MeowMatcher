@@ -71,7 +71,71 @@ To get started, you'll need to clone the **MeowMatcher** repository to your loca
 ```bash
 git clone https://github.com/mdadnanshuvo/MeowMatcher.git
 ```
+Once the repository has been cloned, navigate to the project directory:
 
 ```bash
 cd MeowMatcher
 ```
+### 2. **Install Go**
+
+Make sure you have Go installed on your system. You can check your Go version by running the following command:
+
+```bash
+go version
+```
+
+If Go is not installed, download and install it from the official Go website. Follow the installation instructions based on your operating system.
+
+### 3. **Install Beego**
+The MeowMatcher project uses the Beego web framework. To install Beego, run the following command:
+
+```bash
+go get github.com/astaxie/beego
+```
+Additionally, you'll need Bee (Beego's command-line tool) for running tasks like creating and managing Beego applications. Install Bee by running:
+```bash
+go get github.com/beego/bee
+```
+
+### 4. **Install Project Dependencies**
+
+After installing Go and Beego, you need to install all the necessary dependencies for the project. Run the following command to retrieve and install all dependencies specified in the go.mod file:
+
+```bash
+go mod tidy
+```
+This will ensure that all required libraries and modules are downloaded and set up properly.
+
+### 5. **Configure the Application**
+
+The **MeowMatcher** application uses **The Cat API** to fetch images, breed information, and cat facts. You must configure your **API Key** to access the data:
+
+1. Sign up for an API key at [The Cat API](https://thecatapi.com/).
+2. After obtaining the API key, open the `conf/app.conf` file.
+3. Add your **API Key** in the configuration file like this:
+
+```conf
+api_key=YOUR_API_KEY_HERE
+```
+
+Make sure to replace YOUR_API_KEY_HERE with the actual API key you received from The Cat API.
+
+
+### 6. **Run the Application Locally**
+
+To start the **MeowMatcher** application locally, use the following command:
+
+```bash
+bee run
+```
+
+This command will start the Beego web server. Once the server is running, you can access the application in your browser at:
+
+```bash
+http://localhost:8080
+```
+
+
+### Explanation:
+- The command `bee run` is wrapped in a **bash code block** for terminal commands.
+- The URL `http://localhost:8080` is wrapped in an **arduino code block**, though in this context, it's just for styling the URL. You could also use a simple code block (`code` or `text`) for the URL, but I've kept it as you initially indicated.
