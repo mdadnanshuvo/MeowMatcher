@@ -66,7 +66,12 @@ This version reflects the advanced features like modals, the responsive design, 
 
 ### 1. **Clone the Repository**
 
-To get started, you'll need to clone the repository to your local machine. Open a terminal and run the following command:
+To get started, you'll need to clone the **MeowMatcher** repository to your local machine. Open a terminal and run the following command:
 
 ```bash
-git clone https://github.com/yourusername/catAPIProject.git
+git clone https://github.com/mdadnanshuvo/MeowMatcher.git
+```
+
+```bash
+cd MeowMatcher
+```
