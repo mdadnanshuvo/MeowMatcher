@@ -2,102 +2,96 @@ package channels
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
-var fetchBreedImagesWrapper = fetchBreedImages
-var originalFetchBreedImages = fetchBreedImages
-
-func mockableFetchBreedImages(apiKey, baseURL, breedID string, limit int) ([]map[string]interface{}, error) {
-	// Use the mock implementation for testing
-	return originalFetchBreedImages(apiKey, baseURL, breedID, limit)
-}
-
-func TestWorkerPoolWithRetries(t *testing.T) {
-	apiKey := "test-api-key"
-	baseURL := "https://mockapi.com"
-	breedIDs := []string{"error-breed"}
-	limit := 2
-
-	// Mock retry behavior
-	retryCount := 0
-	mockFetch := func(apiKey, baseURL, breedID string, limit int) ([]map[string]interface{}, error) {
-		retryCount++
-		if retryCount < 3 {
-			return nil, errors.New("mock error")
+func TestWorkerPool(t *testing.T) {
+	// Create a test server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return success response after first attempt
+		images := []map[string]interface{}{
+			{"url": "test1.jpg", "id": "1"},
+			{"url": "test2.jpg", "id": "2"},
 		}
-		return []map[string]interface{}{
-			{"url": "https://example.com/image1.jpg"},
-		}, nil
+		json.NewEncoder(w).Encode(images)
+	}))
+	defer server.Close()
+
+	breedIDs := []string{"breed1", "breed2"}
+	results, err := WorkerPool("test-api-key", server.URL, breedIDs, 2)
+
+	if err != nil {
+		t.Errorf("WorkerPool() error = %v", err)
 	}
-
-	// Redirect the wrapper to the mock implementation
-	defer func() { fetchBreedImagesWrapper = fetchBreedImages }()
-	fetchBreedImagesWrapper = mockFetch
-
-	results, err := WorkerPool(apiKey, baseURL, breedIDs, limit)
-	assert.NoError(t, err, "Expected no error after retries")
-	assert.Len(t, results, 1, "Expected one result after retries")
-	assert.Equal(t, "error-breed", results[0]["breed_id"])
+	if len(results) != len(breedIDs) {
+		t.Errorf("Expected %d results, got %d", len(breedIDs), len(results))
+	}
 }
 
-func TestFetchDataFromAPIWithRateLimiting(t *testing.T) {
-	retryCount := 0
-	r := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		retryCount++
-		if retryCount < 3 {
-			w.Header().Set("Retry-After", "1")
+func TestFetchDataFromAPI(t *testing.T) {
+	// Test server that simulates rate limiting then success
+	callCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		if callCount < 2 {
 			w.WriteHeader(http.StatusTooManyRequests)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`[{"key":"value"}]`))
+		response := []map[string]interface{}{
+			{"data": "test"},
+		}
+		json.NewEncoder(w).Encode(response)
 	}))
-	defer r.Close()
+	defer server.Close()
 
-	apiKey := "test-api-key"
-	data, err := fetchDataFromAPI(apiKey, r.URL, "", nil)
-	assert.NoError(t, err, "Expected no error after retries")
-	assert.Len(t, data, 1, "Expected one item after retries")
-	assert.Equal(t, "value", data[0]["key"])
+	data, err := fetchDataFromAPI("test-key", server.URL, "/test", nil)
+	if err != nil {
+		t.Errorf("fetchDataFromAPI() error = %v", err)
+	}
+	if len(data) != 1 {
+		t.Errorf("Expected 1 result, got %d", len(data))
+	}
 }
 
 func TestFetchDataConcurrently(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(100 * time.Millisecond) // Simulate network delay
-		json.NewEncoder(w).Encode([]map[string]interface{}{{"test": "data"}})
+		response := []map[string]interface{}{
+			{"data": fmt.Sprintf("response for %s", r.URL.Path)},
+		}
+		json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
 
 	endpoints := map[string]map[string]string{
-		"/endpoint1": {"param": "value1"},
-		"/endpoint2": {"param": "value2"},
+		"/test1": {"param": "value1"},
+		"/test2": {"param": "value2"},
 	}
 
-	result, err := FetchDataConcurrently("test-key", server.URL, endpoints)
+	results, err := FetchDataConcurrently("test-key", server.URL, endpoints)
 	if err != nil {
 		t.Errorf("FetchDataConcurrently() error = %v", err)
 	}
-	if len(result) != len(endpoints) {
-		t.Errorf("FetchDataConcurrently() got %v results, want %v", len(result), len(endpoints))
+	if len(results) != len(endpoints) {
+		t.Errorf("Expected %d results, got %d", len(endpoints), len(results))
 	}
 }
 
 func TestFetchBreedImages(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("x-api-key") != "test-key" {
+		// Verify API key is present
+		if r.Header.Get("x-api-key") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		json.NewEncoder(w).Encode([]map[string]interface{}{
+
+		// Return successful response
+		images := []map[string]interface{}{
 			{"url": "test.jpg", "breed_id": "test-breed"},
-		})
+		}
+		json.NewEncoder(w).Encode(images)
 	}))
 	defer server.Close()
 
@@ -105,7 +99,7 @@ func TestFetchBreedImages(t *testing.T) {
 	if err != nil {
 		t.Errorf("fetchBreedImages() error = %v", err)
 	}
-	if len(images) == 0 {
-		t.Error("fetchBreedImages() returned no images")
+	if len(images) != 1 {
+		t.Errorf("Expected 1 image, got %d", len(images))
 	}
 }

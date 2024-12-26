@@ -1,8 +1,11 @@
 package routers
 
 import (
+	"flag"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/beego/beego"
@@ -11,7 +14,20 @@ import (
 )
 
 func init() {
-	web.BConfig.RunMode = "test"
+	// Explicitly load the configuration for tests
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	err := web.LoadAppConfig("ini", "conf/app.conf")
+	if err != nil {
+		fmt.Println("Error loading configuration during tests:", err)
+	}
+
+	web.AppConfig.Set("appname", "catApiProject")
+	web.AppConfig.Set("httpport", "8080")
+	web.AppConfig.Set("runmode", "test")
+	web.AppConfig.Set("cat_api_key", "testApiKey")
+	web.AppConfig.Set("cat_api_base_url", "https://mockapi.com/v1")
+	web.AppConfig.Set("cat_api_sub_id", "testSubID")
+
 }
 
 func TestRoutes(t *testing.T) {
