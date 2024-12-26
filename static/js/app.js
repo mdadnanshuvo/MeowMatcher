@@ -3,8 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabs = document.querySelectorAll(".tab");
 
     // Initialize the app with the default tab
+    loadBreeds();
     loadVoting();
-    loadBreeds;
+   
    
 // Adding Icons to Tabs Dynamically
 tabs.forEach((tab) => {
@@ -451,19 +452,40 @@ async function postVote(imageId, value) {
             },
             body: JSON.stringify(data)
         })
-            .then(response => response.json())
-            .then(responseData => {
-                if (responseData.message) {
-                   
-                    loadFavorites(); // Refresh the favorites list
-                } else if (responseData.error) {
-                    showToast("Error: " + responseData.error); // Show error message
-                }
-            })
-            .catch(error => {
-                console.error("Error saving favorite:", error);
-                showToast("An error occurred while saving the favorite. Please try again.");
-            });
+        .then(response => response.json())
+        .then(responseData => {
+            // Log the raw response data to check what you get back from the API
+            console.log("API Response:", responseData);
+    
+            if (responseData.message) {
+                // After successfully adding a favorite, get the current favorites from localStorage
+                const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    
+                // Manually construct the new favorite object based on the 'cat' object
+                const newFavorite = {
+                    id: cat.id,
+                    image: {
+                        url: cat.imageUrl // Assuming `cat.imageUrl` exists and contains the URL
+                    }
+                };
+    
+                // Add the new favorite to the list
+                favorites.push(newFavorite);
+                localStorage.setItem("favorites", JSON.stringify(favorites)); // Save to localStorage
+    
+                // Log the updated favorites in localStorage to confirm
+                console.log("Updated favorites in localStorage:", JSON.parse(localStorage.getItem("favorites")));
+    
+                // Optionally, refresh the favorites UI by loading them again from localStorage
+                loadFavorites();
+            } else if (responseData.error) {
+                showToast("Error: " + responseData.error); // Show error message
+            }
+        })
+        .catch(error => {
+            console.error("Error saving favorite:", error);
+            showToast("An error occurred while saving the favorite. Please try again.");
+        });
     }
     
     
@@ -471,76 +493,98 @@ async function postVote(imageId, value) {
         const apiUrl = '/get-favourites'; // Backend route for fetching favorites
         const content = document.getElementById("cat-content");
     
-        try {
-            const response = await fetch(apiUrl, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
+        // Try to load favorites from localStorage first
+        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     
-            if (response.ok) {
-                const favorites = await response.json();
-                console.log("Fetched Favorites (raw):", favorites); // Log for debugging
+        // If there are no valid favorites in localStorage, fetch from the backend
+        if (favorites.length === 0) {
+            console.log("No valid favorites in localStorage. Fetching from API...");
     
-                // Filter out favorites without valid images
-                const validFavorites = favorites.filter(fav => fav.image && fav.image.url);
-                console.log("Valid Favorites:", validFavorites); // Log valid favorites
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
     
-                if (validFavorites.length === 0) {
-                    content.innerHTML = "<p>You have no valid favorites yet! ❤️</p>";
+                if (response.ok) {
+                    favorites = await response.json();
+                    console.log("Fetched Favorites (raw):", favorites); // Log for debugging
+    
+                    // Filter out favorites without valid images
+                    const validFavorites = favorites.filter(fav => fav.image && fav.image.url);
+                    console.log("Valid Favorites:", validFavorites); // Log valid favorites
+    
+                    if (validFavorites.length === 0) {
+                        content.innerHTML = "<p>You have no valid favorites yet! ❤️</p>";
+                        return;
+                    }
+    
+                    // Store valid favorites in localStorage
+                    localStorage.setItem("favorites", JSON.stringify(validFavorites));
+    
+                    // Log the favorites in localStorage after saving them
+                    console.log("Favorites in localStorage after save:", JSON.parse(localStorage.getItem("favorites")));
+    
+                    // Update favorites with valid data
+                    favorites = validFavorites;
+                } else {
+                    const error = await response.json();
+                    console.error("Failed to fetch favorites:", error);
+                    content.innerHTML = "<p>Error fetching favorites. Please try again later.</p>";
                     return;
                 }
+            } catch (err) {
+                console.error("Network or server error:", err);
+                content.innerHTML = "<p>Unable to fetch favorites. Please try again later.</p>";
+                return;
+            }
+        }
     
-                // Render valid favorites dynamically
-                content.innerHTML = `
-                    <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
-                        <div class="view-toggle flex py-4 bg-white gap-2">
-                            <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
-                                <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">Grid View
-                            </button>
-                            <button class="toggle-btn" id="list-view" role="button" tabindex="0">
-                                <img src="/static/icons/list-view.png" alt="List View" class="view-icon">List View
-                            </button>
-                        </div>
-                        <div id="favorites-container" class="grid">
-                            ${validFavorites.map((fav, index) => `
-                                <div class="grid-view-item" data-id="${fav.id}" data-index="${index}">
-                                    <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
-                                    <div class="delete-icon-container">
-                                        <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
-                                    </div>
-                                </div>
-                            `).join("")}
-                        </div>
-                        <div id="image-modal" class="modal hidden">
-                            <div class="modal-content">
-                                <span class="close">&times;</span>
-                                <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
-                                <div class="modal-nav">
-                                    <button id="prev-image" class="nav-btn">Prev</button>
-                                    <button id="next-image" class="nav-btn">Next</button>
-                                </div>
+        // Render valid favorites dynamically from localStorage or API
+        content.innerHTML = `
+            <div class="favorites-tab-container px-0 pb-4 mt-4 h-[380px] overflow-y-auto">
+                <div class="view-toggle flex py-4 bg-white gap-2">
+                    <button class="toggle-btn active" id="grid-view" role="button" tabindex="0">
+                        <img src="/static/icons/grid-view.png" alt="Grid View" class="view-icon">Grid View
+                    </button>
+                    <button class="toggle-btn" id="list-view" role="button" tabindex="0">
+                        <img src="/static/icons/list-view.png" alt="List View" class="view-icon">List View
+                    </button>
+                </div>
+                <div id="favorites-container" class="grid">
+                    ${favorites.map((fav, index) => `
+                        <div class="grid-view-item" data-id="${fav.id}" data-index="${index}">
+                            <img src="${fav.image.url}" alt="Favorite Cat" class="object-cover w-full h-full rounded shadow clickable">
+                            <div class="delete-icon-container">
+                                <img src="/static/icons/delete.png" alt="Delete" class="delete-icon" data-id="${fav.id}">
                             </div>
                         </div>
+                    `).join("")}
+                </div>
+                <div id="image-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <img id="modal-image" class="modal-img" src="" alt="Modal Cat">
+                        <div class="modal-nav">
+                            <button id="prev-image" class="nav-btn">Prev</button>
+                            <button id="next-image" class="nav-btn">Next</button>
+                        </div>
                     </div>
-                `;
+                </div>
+            </div>
+        `;
     
-                // Attach event handlers for hover, delete, modal, and view toggle actions
-                attachHoverEvents();
-                attachDeleteHandlers();
-                attachClickHandlers(validFavorites);
-                attachViewToggleHandlers(); // Ensure view toggle works
-            } else {
-                const error = await response.json();
-                console.error("Failed to fetch favorites:", error);
-                content.innerHTML = "<p>Error fetching favorites. Please try again later.</p>";
-            }
-        } catch (err) {
-            console.error("Network or server error:", err);
-            content.innerHTML = "<p>Unable to fetch favorites. Please try again later.</p>";
-        }
+        // Attach event handlers for hover, delete, modal, and view toggle actions
+        attachHoverEvents();
+        attachDeleteHandlers();
+        attachClickHandlers(favorites); // Pass the favorites to the click handlers
+        attachViewToggleHandlers(); // Ensure view toggle works
     }
+    
+    
+    
     
     
     async function deleteFavorite(favID) {
@@ -597,7 +641,22 @@ function attachDeleteHandlers() {
 }
 
 
-// Attach Click Handlers for Modal Opening
+
+// Navigate Modal Images
+function navigateImages(direction, favorites, modalImage) {
+    const length = favorites.length;
+
+    // Get the index of the currently displayed image
+    let currentImageIndex = favorites.findIndex(fav => fav.image.url === modalImage.src);
+
+    // Navigate to the next or previous image
+    currentImageIndex = (currentImageIndex + direction + length) % length;
+
+    // Update the modal image to the new image
+    modalImage.src = favorites[currentImageIndex].image.url;
+}
+
+
 function attachClickHandlers() {
     const clickableImages = document.querySelectorAll(".clickable");
     const modal = document.getElementById("image-modal");
@@ -606,29 +665,43 @@ function attachClickHandlers() {
     const prevImage = document.getElementById("prev-image");
     const nextImage = document.getElementById("next-image");
 
-    let currentImageIndex = 0;
+    // Get favorites from localStorage
     const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
-    clickableImages.forEach((img) => {
+    if (!favorites || favorites.length === 0) {
+        console.error("No favorites found to display in the modal.");
+        return;
+    }
+
+    let currentImageIndex = 0;
+
+    // Open the modal with the clicked image
+    clickableImages.forEach((img, index) => {
         img.addEventListener("click", (e) => {
             currentImageIndex = parseInt(e.target.closest("[data-index]").dataset.index, 10);
-            modalImage.src = favorites[currentImageIndex].url;
-            modal.classList.remove("hidden");
+
+            // Set the image in the modal
+            modalImage.src = favorites[currentImageIndex].image.url;
+            modal.classList.remove("hidden"); // Show the modal
         });
     });
 
+    // Close the modal when clicking the 'X' button
     closeModal.addEventListener("click", () => modal.classList.add("hidden"));
+
+    // Navigate to the previous or next image
     prevImage.addEventListener("click", () => navigateImages(-1, favorites, modalImage));
     nextImage.addEventListener("click", () => navigateImages(1, favorites, modalImage));
+
+    // Close the modal when clicking outside the modal content area
+    window.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            modal.classList.add("hidden");
+        }
+    });
 }
 
-// Navigate Modal Images
-function navigateImages(direction, favorites, modalImage) {
-    const length = favorites.length;
-    let currentImageIndex = favorites.findIndex((cat) => cat.url === modalImage.src);
-    currentImageIndex = (currentImageIndex + direction + length) % length;
-    modalImage.src = favorites[currentImageIndex].url;
-}
+
 
 function attachViewToggleHandlers() {
     const gridViewBtn = document.getElementById("grid-view");
@@ -659,6 +732,10 @@ function attachViewToggleHandlers() {
         toggleView(listViewBtn, gridViewBtn, "list", "grid");
     });
 }
+
+
+
+
 
 
 // Show Toast Notification
