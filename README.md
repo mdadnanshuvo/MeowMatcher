@@ -1,4 +1,4 @@
-# catAPIProject
+# MeowMatcher
 
 ## Project Description
 
@@ -139,3 +139,47 @@ http://localhost:8080
 ### Explanation:
 - The command `bee run` is wrapped in a **bash code block** for terminal commands.
 - The URL `http://localhost:8080` is wrapped in an **arduino code block**, though in this context, it's just for styling the URL. You could also use a simple code block (`code` or `text`) for the URL, but I've kept it as you initially indicated.
+- 
+
+## Controller Documentation: `CatController`
+
+### 1. **GET /cats**
+**Function**: `GetCats`
+
+**Description**: 
+- Retrieves a list of cat images from the **Cat API**.
+- Displays a collection of cat images based on the query parameters (e.g., limit, breed, etc.).
+- Returns a **200 OK** response with a JSON array of cat images.
+
+**Response**:
+- **200 OK**: A JSON array containing the cat images.
+
+```json
+[
+  {
+    "id": "abcd1234",
+    "url": "https://example.com/cat1.jpg",
+    "width": 400,
+    "height": 300,
+    "breeds": [{"id": "beng", "name": "Bengal"}]
+  },
+  ...
+]
+```
+
+### 2. **POST /cats/favorite**
+
+**Function**: `FavoriteCat`
+
+**Description**:
+
+- Allows users to **favorite** a cat image.
+- Takes the `image_id` as input and associates it with the user.
+- Responds with a **201 Created** status when the image is successfully added to favorites.
+
+**Request Body**:
+
+```json
+{
+  "image_id": "abcd1234"
+}
